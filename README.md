@@ -34,7 +34,7 @@ Permite registrar médicos, pacientes y turnos, con autenticación de usuarios y
 
 | Nombre | Usuario GitHub |
 |--------|---------------|
-| ... | [@usuario](https://github.com/usuario) |
+| Lucas Rodríguez | https://github.com/LucasJRz03 |
 | ... | [@usuario](https://github.com/usuario) |
 | ... | [@usuario](https://github.com/usuario) |
 
