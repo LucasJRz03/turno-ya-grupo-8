@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from django.db import models
-
+from django.utils import timezone
 
 class Medico(models.Model):
     """Representa a un profesional médico disponible para turnos."""
@@ -88,4 +88,51 @@ class Medico(models.Model):
     # TODO: Agregar los siguientes modelos:
     # class Especialidad(models.Model): ...  ← extraer especialidad a FK
     # class Paciente(models.Model): ...
-    # class Turno(models.Model): ...
+    class Turno(models.Model):
+        """Representa un turno asignado a un médico y paciente."""
+
+        ESTADO_CHOICES = [
+            ("PENDIENTE", "Pendiente"),
+            ("CONFIRMADO", "Confirmado"),
+            ("CANCELADO", "Cancelado"),
+        ]
+
+        medico = models.ForeignKey("Medico", on_delete=models.CASCADE)
+        paciente = models.ForeignKey("Paciente", on_delete=models.CASCADE)
+        fecha_hora = models.DateTimeField()
+        motivo = models.TextField()
+        estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="PENDIENTE")
+
+        def __str__(self):
+            return f"Turno de {self.paciente} con {self.medico} el {self.fecha_hora.strftime('%Y-%m-%d %H:%M')}"
+        
+        def validate(self):
+            """Valida los datos del turno. Retorna una lista de errores."""
+            errors = []
+
+            if self.fecha_hora < timezone.now():
+                errors.append("La fecha y hora del turno no pueden ser en el pasado.")
+
+            if not self.motivo or not self.motivo.strip():
+                errors.append("El motivo del turno es obligatorio.")
+
+            return errors
+        @classmethod
+        def new(cls, **kwargs):
+            """Crea un nuevo turno si los datos son válidos. Retorna (instancia, errors)."""
+            turno = cls(**kwargs)
+            errors = turno.validate()
+            if errors:
+                return None, errors
+            turno.save()
+            return turno, []
+        
+        def update(self, **kwargs) -> list[str]: 
+            """Actualiza los datos del turno si son válidos. Retorna una lista de errores."""
+            for attr, value in kwargs.items():
+                setattr(self, attr, value)
+            errors = self.validate()
+            if errors:
+                return errors
+            self.save()
+            return []
