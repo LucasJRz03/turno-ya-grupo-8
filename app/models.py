@@ -3,6 +3,45 @@
 from __future__ import annotations
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
+
+class Especialidad(models.Model):
+    """Representa un área de espcialización médica."""
+    
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.nombre
+    
+    @classmethod
+    def validate(cls, nombre, descripcion=""):
+        errors = []
+        if not nombre or not str(nombre).strip(): 
+            errors.append("El nombre de la especialidad es obligatorio.")
+        return errors
+
+    @classmethod
+    def new(cls, nombre, descripcion=""):    
+        errors = cls.validate(nombre, descripcion)
+        if errors:
+            return None, errors
+        especialidad = cls.objects.create(
+            nombre=str(nombre).strip(), 
+            descripcion=str(descripcion).strip()
+        )
+        return especialidad, [] 
+
+    def update(cls, nombre, descripcion=""):
+        errors = self.__class__.validate(nombre, descripcion)
+        if errors:
+            return errors
+        self.nombre = str(nombre).strip()
+        self.descripcion = str(descripcion).strip()
+        self.save()
+        return []
+  
+
 
 class Medico(models.Model):
     """Representa a un profesional médico disponible para turnos."""
@@ -85,54 +124,113 @@ class Medico(models.Model):
         self.save()
         return []
 
-    # TODO: Agregar los siguientes modelos:
-    # class Especialidad(models.Model): ...  ← extraer especialidad a FK
-    # class Paciente(models.Model): ...
-    class Turno(models.Model):
-        """Representa un turno asignado a un médico y paciente."""
+class Paciente(models.Model):
+    """Representa a un paciente registrado en el sistema."""
 
-        ESTADO_CHOICES = [
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    dni = models.CharField(max_length=25, unique=True)
+    email = models.EmailField()
+    telefono = models.CharField(max_length=50, blank=True, null=True)
+     
+    def __str__(self):
+        return f"{self.apellido}, {self.nombre} (Dni: {self.dni})"
+    
+    @classmethod
+    def validate(cls, usuario, nombre, apellido, dni, email, telefono=None):
+        errors = []
+        if not usuario:
+            errors.append("El usuario asociado es obligatorio.")
+        if not nombre or not str(nombre).strip():
+            errors.append("El nombre es obligatorio.")
+        if not apellido or not str(apellido).strip():
+            errors.append("El apellido es obligatorio.")
+        if not dni or not str(dni).strip():
+            errors.append("El DNI es olbigatorio.")
+        if not email or not str(email).strip():
+            errors.append("El email es obligatorio.")
+        return errors
+
+    @classmethod
+    def new(cls, usuario, nombre, apellido, dni, email, telefono=None):
+        errors = cls.validate(usuario, nombre,apellido,dni,email,telefono)
+        if errors:
+            return None, errors
+        
+        paciente = cls.objects.create(
+            usuario=usuario,
+            nombre=str(nombre).strip(),
+            apellido=str(apellido).strip(),
+            dni=str(dni).strip(),
+            email=str(email).strip(),
+            telefono=str(telefono).strip() if telefono else ""
+        )
+        return paciente, []
+
+    def update(self, usuario, nombre, apellido, dni, email, telefono=None):
+        errors = self.__class__.validate(usuario, nombre, apellido, dni, email, telefono)
+        if errors:
+            return errors
+
+        self.usuario = usuario
+        self.nombre = str(nombre).strip()
+        self.apellido = str(apellido).strip()
+        self.dni = str(dni).strip()
+        self.email = str(email).strip()
+        self.telefono = str(telefono).strip() if telefono else ""
+        self.save()
+        return []
+
+class Turno(models.Model): 
+    """Representa un turno asignado a un médico y paciente."""
+
+    ESTADO_CHOICES = [
             ("PENDIENTE", "Pendiente"),
             ("CONFIRMADO", "Confirmado"),
             ("CANCELADO", "Cancelado"),
-        ]
+    ]
 
-        medico = models.ForeignKey("Medico", on_delete=models.CASCADE)
-        paciente = models.ForeignKey("Paciente", on_delete=models.CASCADE)
-        fecha_hora = models.DateTimeField()
-        motivo = models.TextField()
-        estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="PENDIENTE")
+    medico = models.ForeignKey("Medico", on_delete=models.CASCADE)
+    paciente = models.ForeignKey("Paciente", on_delete=models.CASCADE)
+    fecha_hora = models.DateTimeField()
+    motivo = models.TextField()
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="PENDIENTE")
 
-        def __str__(self):
-            return f"Turno de {self.paciente} con {self.medico} el {self.fecha_hora.strftime('%Y-%m-%d %H:%M')}"
+    def __str__(self):
+        return f"Turno de {self.paciente} con {self.medico} el {self.fecha_hora.strftime('%Y-%m-%d %H:%M')}"
         
-        def validate(self):
-            """Valida los datos del turno. Retorna una lista de errores."""
-            errors = []
+    def validate(self):
+        """Valida los datos del turno. Retorna una lista de errores."""
+        errors = []
 
-            if self.fecha_hora < timezone.now():
-                errors.append("La fecha y hora del turno no pueden ser en el pasado.")
+        if self.fecha_hora < timezone.now():
+            errors.append("La fecha y hora del turno no pueden ser en el pasado.")
 
-            if not self.motivo or not self.motivo.strip():
-                errors.append("El motivo del turno es obligatorio.")
+        if not self.motivo or not self.motivo.strip():
+            errors.append("El motivo del turno es obligatorio.")
 
+        return errors
+    @classmethod
+    def new(cls, **kwargs):
+        """Crea un nuevo turno si los datos son válidos. Retorna (instancia, errors)."""
+        turno = cls(**kwargs)
+        errors = turno.validate()
+        if errors:
+            return None, errors
+        turno.save()
+        return turno, []
+        
+    def update(self, **kwargs) -> list[str]: 
+        """Actualiza los datos del turno si son válidos. Retorna una lista de errores."""
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        errors = self.validate()
+        if errors:
             return errors
-        @classmethod
-        def new(cls, **kwargs):
-            """Crea un nuevo turno si los datos son válidos. Retorna (instancia, errors)."""
-            turno = cls(**kwargs)
-            errors = turno.validate()
-            if errors:
-                return None, errors
-            turno.save()
-            return turno, []
-        
-        def update(self, **kwargs) -> list[str]: 
-            """Actualiza los datos del turno si son válidos. Retorna una lista de errores."""
-            for attr, value in kwargs.items():
-                setattr(self, attr, value)
-            errors = self.validate()
-            if errors:
-                return errors
-            self.save()
-            return []
+        self.save()
+        return []
+
+ # TODO: Agregar los siguientes modelos:
+    # class Especialidad(models.Model): ...  ← extraer especialidad a FK
+    # class Paciente(models.Mode
