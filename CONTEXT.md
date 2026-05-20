@@ -29,7 +29,7 @@ turno-ya/
 │   └── wsgi.py
 ├── app/                   # App principal
 │   ├── models.py          # Modelos del dominio
-│   ├── views.py           # Vistas (FBV)
+│   ├── views.py           # Vistas (CBV)
 │   ├── urls.py            # URLs con app_name = "app"
 │   ├── admin.py           # Registro de modelos en el admin
 │   ├── apps.py
@@ -185,7 +185,7 @@ def turnos_por_medico_ordenados(medico_id: int) -> QuerySet: ...
 
 ## Convenciones del proyecto
 
-- Vistas: FBV (Function-Based Views), no CBV
+- Vistas: CBV (Class-Based Views), no FBV
 - URLs: siempre con `app_name` y `name`, referenciar con `{% url 'app:nombre' %}`
 - Templates: siempre extienden `base.html`
 - Modelos: siempre incluir `__str__`, `validate`, `new`, `update`
