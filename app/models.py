@@ -32,7 +32,7 @@ class Especialidad(models.Model):
         )
         return especialidad, [] 
 
-    def update(cls, nombre, descripcion=""):
+    def update(self, nombre, descripcion=""):
         errors = self.__class__.validate(nombre, descripcion)
         if errors:
             return errors
