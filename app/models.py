@@ -83,8 +83,12 @@ class Medico(models.Model):
         if not matricula or not matricula.strip():
             errors.append("La matrícula es obligatoria.")
 
-        if not especialidad or not especialidad.strip():
-            errors.append("La especialidad es obligatoria.")
+        # `especialidad` puede ser una instancia de Especialidad o un nombre (string)
+        if isinstance(especialidad, Especialidad):
+            pass
+        else:
+            if not especialidad or not str(especialidad).strip():
+                errors.append("La especialidad es obligatoria.")
 
         return errors
 
@@ -98,11 +102,19 @@ class Medico(models.Model):
         if errors:
             return None, errors
 
+        # Resolver `especialidad`: si viene como string, buscar o crear la Especialidad
+        if isinstance(especialidad, Especialidad):
+            esp = especialidad
+        else:
+            esp, _ = Especialidad.objects.get_or_create(
+                nombre=str(especialidad).strip(), defaults={"descripcion": ""}
+            )
+
         medico = cls.objects.create(
             nombre=nombre.strip(),
             apellido=apellido.strip(),
             matricula=matricula.strip(),
-            especialidad=especialidad.strip(),
+            especialidad=esp,
         )
         return medico, []
 
@@ -118,7 +130,14 @@ class Medico(models.Model):
         self.nombre = nombre.strip()
         self.apellido = apellido.strip()
         self.matricula = matricula.strip()
-        self.especialidad = especialidad.strip()
+        # Resolver especialidad a instancia si se pasa como nombre
+        if isinstance(especialidad, Especialidad):
+            esp = especialidad
+        else:
+            esp, _ = Especialidad.objects.get_or_create(
+                nombre=str(especialidad).strip(), defaults={"descripcion": ""}
+            )
+        self.especialidad = esp
         self.save()
         return []
 
@@ -207,6 +226,9 @@ class Turno(models.Model):
 
         if not self.motivo or not self.motivo.strip():
             errors.append("El motivo del turno es obligatorio.")
+
+        if self.estado not in dict(self.ESTADO_CHOICES):
+            errors.append(f"El estado del turno debe ser uno de: {', '.join(dict(self.ESTADO_CHOICES).keys())}.")
 
         return errors
     
