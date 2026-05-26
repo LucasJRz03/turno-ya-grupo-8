@@ -41,15 +41,13 @@ class Especialidad(models.Model):
         self.save()
         return []
   
-
-
 class Medico(models.Model):
     """Representa a un profesional médico disponible para turnos."""
 
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True)
-    especialidad = models.CharField(max_length=100)
+    especialidad = models.ForeignKey('Especialidad', on_delete=models.PROTECT, related_name='medicos')
 
     class Meta:
         ordering = ["apellido", "nombre"]
@@ -211,6 +209,7 @@ class Turno(models.Model):
             errors.append("El motivo del turno es obligatorio.")
 
         return errors
+    
     @classmethod
     def new(cls, **kwargs):
         """Crea un nuevo turno si los datos son válidos. Retorna (instancia, errors)."""
@@ -230,7 +229,3 @@ class Turno(models.Model):
             return errors
         self.save()
         return []
-
- # TODO: Agregar los siguientes modelos:
-    # class Especialidad(models.Model): ...  ← extraer especialidad a FK
-    # class Paciente(models.Mode
