@@ -41,15 +41,13 @@ class Especialidad(models.Model):
         self.save()
         return []
   
-
-
 class Medico(models.Model):
     """Representa a un profesional médico disponible para turnos."""
 
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True)
-    especialidad = models.CharField(max_length=100)
+    especialidad = models.ForeignKey('Especialidad', on_delete=models.PROTECT, related_name='medicos')
 
     class Meta:
         ordering = ["apellido", "nombre"]
@@ -85,8 +83,12 @@ class Medico(models.Model):
         if not matricula or not matricula.strip():
             errors.append("La matrícula es obligatoria.")
 
-        if not especialidad or not especialidad.strip():
-            errors.append("La especialidad es obligatoria.")
+        # `especialidad` puede ser una instancia de Especialidad o un nombre (string)
+        if isinstance(especialidad, Especialidad):
+            pass
+        else:
+            if not especialidad or not str(especialidad).strip():
+                errors.append("La especialidad es obligatoria.")
 
         return errors
 
@@ -100,11 +102,19 @@ class Medico(models.Model):
         if errors:
             return None, errors
 
+        # Resolver `especialidad`: si viene como string, buscar o crear la Especialidad
+        if isinstance(especialidad, Especialidad):
+            esp = especialidad
+        else:
+            esp, _ = Especialidad.objects.get_or_create(
+                nombre=str(especialidad).strip(), defaults={"descripcion": ""}
+            )
+
         medico = cls.objects.create(
             nombre=nombre.strip(),
             apellido=apellido.strip(),
             matricula=matricula.strip(),
-            especialidad=especialidad.strip(),
+            especialidad=esp,
         )
         return medico, []
 
@@ -120,7 +130,14 @@ class Medico(models.Model):
         self.nombre = nombre.strip()
         self.apellido = apellido.strip()
         self.matricula = matricula.strip()
-        self.especialidad = especialidad.strip()
+        # Resolver especialidad a instancia si se pasa como nombre
+        if isinstance(especialidad, Especialidad):
+            esp = especialidad
+        else:
+            esp, _ = Especialidad.objects.get_or_create(
+                nombre=str(especialidad).strip(), defaults={"descripcion": ""}
+            )
+        self.especialidad = esp
         self.save()
         return []
 
@@ -136,6 +153,10 @@ class Paciente(models.Model):
      
     def __str__(self):
         return f"{self.apellido}, {self.nombre} (Dni: {self.dni})"
+
+    def nombre_completo(self):
+        """Retorna nombre y apellido concatenados."""
+        return f"{self.nombre} {self.apellido}"
     
     @classmethod
     def validate(cls, usuario, nombre, apellido, dni, email, telefono=None):
@@ -147,7 +168,7 @@ class Paciente(models.Model):
         if not apellido or not str(apellido).strip():
             errors.append("El apellido es obligatorio.")
         if not dni or not str(dni).strip():
-            errors.append("El DNI es olbigatorio.")
+            errors.append("El DNI es obligatorio.")
         if not email or not str(email).strip():
             errors.append("El email es obligatorio.")
         return errors
@@ -210,7 +231,11 @@ class Turno(models.Model):
         if not self.motivo or not self.motivo.strip():
             errors.append("El motivo del turno es obligatorio.")
 
+        if self.estado not in dict(self.ESTADO_CHOICES):
+            errors.append(f"El estado del turno debe ser uno de: {', '.join(dict(self.ESTADO_CHOICES).keys())}.")
+
         return errors
+    
     @classmethod
     def new(cls, **kwargs):
         """Crea un nuevo turno si los datos son válidos. Retorna (instancia, errors)."""
@@ -230,7 +255,3 @@ class Turno(models.Model):
             return errors
         self.save()
         return []
-
- # TODO: Agregar los siguientes modelos:
-    # class Especialidad(models.Model): ...  ← extraer especialidad a FK
-    # class Paciente(models.Mode
