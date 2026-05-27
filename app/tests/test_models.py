@@ -207,3 +207,129 @@ class TurnoModelTest(TestCase):
         self.turno.refresh_from_db()
         self.assertEqual(self.turno.motivo, "Consulta general")  # sin cambios
         self.assertEqual(self.turno.estado, "PENDIENTE")  # sin cambios
+
+class PacienteModelTest(TestCase):
+    """Verifica comportamiento básico y validaciones del modelo."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="jaundias", password="12345")
+        self.paciente = Paciente.objects.create(
+            usuario = self.user,
+            nombre = "Juan",
+            apellido="Díaz",
+            dni = "123456789",
+            email = "juanDiaz@gmail.com",
+            telefono = "2901-55-11-11"
+        )
+
+    def test_str_incluye_apellido_y_nombre(self):
+        self.assertIn("Díaz", str(self.paciente))
+        self.assertIn("Juan", str(self.paciente))
+
+    def test_nombre_completo(self):
+        self.assertEqual(self.paciente.nombre_completo(), "Juan Díaz")
+
+  
+    def test_dni(self):
+        self.assertEqual(self.paciente.dni, "123456789")
+    
+    def test_email(self):
+        self.assertEqual(self.paciente.email, "juanDiaz@gmail.com")
+    
+    def test_telefono(self):
+        self.assertEqual(self.paciente.telefono, "2901-55-11-11")
+    
+    # --- validate ----
+    def test_validate_datos_correctos_retorna_lista_vacia(self):
+        errors = Paciente.validate(
+            usuario=self.user,
+            nombre="Ana",
+            apellido="Pacheco",
+            dni="987654321",
+            email="ana@gmail.com",
+            telefono="2901-44-11-11"
+        )
+        self.assertEqual(errors, [])
+
+    def test_validate_nombre_vacio_retorna_error(self):
+        errors = Paciente.validate(
+            usuario=self.user,
+            nombre="",
+            apellido="Pacheco",
+            dni="987654321",
+            email="ana@gmail.com",
+            telefono="2901-44-11-11"
+        )
+        self.assertIn("El nombre es obligatorio.", errors)
+
+    def test_validate_dni_vacio_retorna_error(self):
+        errors = Paciente.validate(
+            usuario=self.user,
+            nombre="Ana",
+            apellido="Pacheco",
+            dni="",
+            email="ana@gmail.com",
+            telefono="2901-44-11-11"
+        )
+        self.assertIn("El DNI es obligatorio.", errors)
+
+    # --- new ---
+    def test_new_crea_paciente_con_datos_validos(self):
+        nuevo_user = User.objects.create_user(username="carloslopes", password="contra123")
+        paciente, errors = Paciente.new(
+            usuario=nuevo_user,
+            nombre="Carlos",
+            apellido="López",
+            dni="11223344",
+            email="carlos@gmail.com",
+            telefono="2901-44-22-22"
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(paciente)
+        self.assertEqual(paciente.nombre, "Carlos")
+        # Debería haber 2 pacientes ahora, Juan y Carlos
+        self.assertEqual(Paciente.objects.count(), 2)
+
+    def test_new_con_datos_invalidos_retorna_errores_y_no_crea(self):
+        datos_user = User.objects.create_user(username="pepe", password="hola")
+        paciente, errors = Paciente.new(
+            usuario=datos_user,
+            nombre="",
+            apellido="Gómez",
+            dni="112233445",
+            email="carlos@gmail.com", 
+            telefono=""
+        )
+        self.assertIsNone(paciente)
+        self.assertTrue(len(errors) > 0)
+        self.assertEqual(Paciente.objects.count(), 1) # Solo Juan
+
+    # --- update ---
+    def test_update_modifica_datos_correctamente(self): 
+        errors = self.paciente.update(
+            usuario=self.user,
+            nombre="Juan Cruz",
+            apellido="Díaz",
+            dni="123456789",
+            email="juanCruz@gmail.com",
+            telefono="2901-55-11-11"
+        )
+        self.assertEqual(errors, [])
+
+        # Refrescar desde la base de datos para asegurar que se guardó
+        self.paciente.refresh_from_db()
+        self.assertEqual(self.paciente.nombre, "Juan Cruz")
+        self.assertEqual(self.paciente.email, "juanCruz@gmail.com")
+
+    def test_update_con_datos_invalidos_no_modifica(self):
+        errors = self.paciente.update(
+            usuario=self.user,           
+            nombre="",
+            apellido="Díaz",
+            dni="123456789",
+            email="juanCruz@gmail.com",
+            telefono="2901-55-11-11"
+        )
+        self.assertTrue(len(errors) > 0)
+        self.paciente.refresh_from_db()
+        self.assertEqual(self.paciente.nombre, "Juan") # sin cambios

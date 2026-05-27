@@ -153,6 +153,10 @@ class Paciente(models.Model):
      
     def __str__(self):
         return f"{self.apellido}, {self.nombre} (Dni: {self.dni})"
+
+    def nombre_completo(self):
+        """Retorna nombre y apellido concatenados."""
+        return f"{self.nombre} {self.apellido}"
     
     @classmethod
     def validate(cls, usuario, nombre, apellido, dni, email, telefono=None):
@@ -164,7 +168,7 @@ class Paciente(models.Model):
         if not apellido or not str(apellido).strip():
             errors.append("El apellido es obligatorio.")
         if not dni or not str(dni).strip():
-            errors.append("El DNI es olbigatorio.")
+            errors.append("El DNI es obligatorio.")
         if not email or not str(email).strip():
             errors.append("El email es obligatorio.")
         return errors
