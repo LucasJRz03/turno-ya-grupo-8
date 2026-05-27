@@ -333,3 +333,20 @@ class PacienteModelTest(TestCase):
         self.assertTrue(len(errors) > 0)
         self.paciente.refresh_from_db()
         self.assertEqual(self.paciente.nombre, "Juan") # sin cambios
+
+class EspecialidadModelTest(TestCase):
+    """Verifica comportamiento básico y validaciones del modelo."""
+    
+    def test_str_retorna_nombre(self):
+        esp = Especialidad.objects.create(nombre="Cardiología")
+        self.assertEqual(str(esp), "Cardiología")
+        
+    # --- validate ----
+    def test_validate_nombre_vacio_retorna_error(self):
+        errores = Especialidad.validate(nombre="")
+        self.assertIn("El nombre de la especialidad es obligatorio.", errores)
+
+    def test_new_crea_especialidad(self):
+        esp, errores = Especialidad.new(nombre="Neurología")
+        self.assertEqual(errores,[])
+        self.assertEqual(esp.nombre, "Neurología")
