@@ -1,11 +1,12 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
-from django.views.generic import ListView, TemplateView, CreateView, DetailView
+from django.views.generic import ListView, TemplateView, CreateView, DetailView, UpdateView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import TurnoForm
 from .models import Medico, Turno, Paciente
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+from django.http import HttpResponseRedirect
 
 
 class HomeView(TemplateView):
@@ -66,6 +67,23 @@ class DetalleMedicoView(DetailView):
     template_name = "clinica/detalle_medico.html"
     context_object_name = "medico"
 
-# TODO: implementar las siguientes vistas:
+class CancelarTurnoView(LoginRequiredMixin, UpdateView):
+    """Vista para cancelar un turno existente."""
+    model = Turno
+    fields = [] # Solo es necesario cambiar el estado
+    template_name = "clinica/cancelar_turno_confirm.html"
 
-# class CancelarTurnoView(...): ...
+    def post(self, request, *args, **kwargs):
+        turno = self.get_object()
+        # verificar permisos: solo el paciente o el médico en cuestion pueden cancelar
+        if request.user == turno.paciente.usuario or request.user == turno.medico.usuario:
+            turno.cancelar() 
+            messages.success(self.request, "El turno fue cancelado con éxito.")
+        else:
+            messages.error(self.request, "No tienes permiso para cancelar el turno.")
+        
+        return HttpResponseRedirect(reverse("app:lista_turnos"))
+
+
+
+
