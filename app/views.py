@@ -1,10 +1,10 @@
 """Vistas iniciales para navegar médicos y pantalla de inicio."""
 
-from django.views.generic import ListView, TemplateView, CreateView
+from django.views.generic import ListView, TemplateView, CreateView, DetailView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import TurnoForm
-from .models import Medico, Turno
+from .models import Medico, Turno, Paciente
 from django.urls import reverse_lazy
 
 
@@ -53,7 +53,19 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, "Turno creado correctamente.")
         return super().form_valid(form)
 
+class ListaPacientesView(ListView):
+    """Lista todos los pacientes registrados."""
+    model = Paciente
+    template_name = "clinica/lista_pacientes.html"
+    context_object_name = "pacientes"
+    ordering = ['apellido', 'nombre'] # Ordenar por apellido y nombre 
+
+class DetalleMedicoView(DetailView):
+    """Muestra el detalle de un médico"""
+    model = Medico
+    template_name = "clinica/detalle_medico.html"
+    context_object_name = "medico"
+
 # TODO: implementar las siguientes vistas:
-# class DetalleMedicoView(...): ...
+
 # class CancelarTurnoView(...): ...
-# class ListaPacientesView(...): ...
