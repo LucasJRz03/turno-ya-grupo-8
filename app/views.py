@@ -2,6 +2,7 @@
 
 from django.views.generic import ListView, TemplateView, CreateView
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import TurnoForm
 from .models import Medico, Turno
 from django.urls import reverse_lazy
@@ -20,12 +21,29 @@ class ListaMedicosView(ListView):
     template_name = "clinica/lista_medicos.html"
     context_object_name = "medicos"
 
-class TurnoCreateView(CreateView):
+
+class TurnoListView(LoginRequiredMixin, ListView):
+    """Lista los turnos asociados a un paciente o medico."""
+
+    model = Turno
+    template_name = "clinica/lista_turnos.html"
+    context_object_name = "turnos"
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "medico"):
+            return Turno.objects.filter(medico__usuario= user).select_related("paciente")
+        elif hasattr(user, "paciente"):
+            return Turno.objects.filter(paciente__usuario=user).select_related("medico")
+        else:
+            return Turno.objects.none()
+
+class TurnoCreateView(LoginRequiredMixin, CreateView):
     """Vista para crear un nuevo turno."""
 
     model = Turno
     form_class = TurnoForm
-    fields = ["medico", "paciente", "fecha_hora", "motivo",]
+    fields = ["medico", "fecha_hora", "motivo",]
     template_name = "clinica/nuevo_turno.html"
     success_url = reverse_lazy("app:lista_turnos")
 
@@ -37,7 +55,5 @@ class TurnoCreateView(CreateView):
 
 # TODO: implementar las siguientes vistas:
 # class DetalleMedicoView(...): ...
-# class ListaTurnosView(...): ...
-# class NuevoTurnoView(...): ...
 # class CancelarTurnoView(...): ...
 # class ListaPacientesView(...): ...
