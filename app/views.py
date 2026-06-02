@@ -15,7 +15,7 @@ class HomeView(TemplateView):
     template_name = "clinica/home.html"
 
 
-class ListaMedicosView(ListView):
+class MedicoListView(ListView):
     """Lista todos los médicos."""
 
     model = Medico
@@ -54,20 +54,20 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, "Turno creado correctamente.")
         return super().form_valid(form)
 
-class ListaPacientesView(ListView):
+class PacienteListView(ListView):
     """Lista todos los pacientes registrados."""
     model = Paciente
     template_name = "clinica/lista_pacientes.html"
     context_object_name = "pacientes"
     ordering = ['apellido', 'nombre'] # Ordenar por apellido y nombre 
 
-class DetalleMedicoView(DetailView):
+class MedicoDetailView(DetailView):
     """Muestra el detalle de un médico"""
     model = Medico
     template_name = "clinica/detalle_medico.html"
     context_object_name = "medico"
 
-class CancelarTurnoView(LoginRequiredMixin, UpdateView):
+class TurnoCancelView(LoginRequiredMixin, UpdateView):
     """Vista para cancelar un turno existente."""
     model = Turno
     fields = [] # Solo es necesario cambiar el estado

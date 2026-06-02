@@ -9,12 +9,12 @@ urlpatterns = [
     # Inicio
     path("", views.HomeView.as_view(), name="home"),
     # Medicos
-    path("medicos/", views.ListaMedicosView.as_view(), name="lista_medicos"),
-    path("medicos/<int:pk>/", views.DetalleMedicoView.as_view(), name="detalle_medico"),
+    path("medicos/", views.MedicoListView.as_view(), name="lista_medicos"),
+    path("medicos/<int:pk>/", views.MedicoDetailView.as_view(), name="detalle_medico"),
     # Turnos
     path("turnos/", views.TurnoListView.as_view(), name="lista_turnos"),
     path("turnos/nuevo/", views.TurnoCreateView.as_view(), name="nuevo_turno"),
-    path("turnos/<int:pk>/cancelar/", views.CancelarTurnoView.as_view(), name="cancelar_turno")   
+    path("turnos/<int:pk>/cancelar/", views.TurnoCancelView.as_view(), name="cancelar_turno")   
 
     # TODO:
     # path("medicos/<int:pk>/", views.DetalleMedicoView.as_view(), name="detalle_medico"),
