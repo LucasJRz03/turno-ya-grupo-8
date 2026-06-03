@@ -1,0 +1,17 @@
+[
+  {
+    "model": "app.especialidad",
+    "pk": 1,
+    "fields": { "nombre": "Clínica Médica", "descripcion": "Medicina general" }
+  },
+  {
+    "model": "app.especialidad",
+    "pk": 2,
+    "fields": { "nombre": "Pediatría", "descripcion": "Medicina infantil" }
+  },
+  {
+    "model": "app.especialidad",
+    "pk": 3,
+    "fields": { "nombre": "Cardiología", "descripcion": "Enfermedades del corazón" }
+  }
+]

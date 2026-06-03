@@ -1,5 +1,5 @@
 from django import forms
-from .models import Turno, Medico, Paciente, timezone
+from .models import Turno, timezone
 
 class TurnoForm(forms.ModelForm):
     """Formulario para crear un turno nuevo."""
