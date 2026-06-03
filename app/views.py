@@ -44,7 +44,6 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
 
     model = Turno
     form_class = TurnoForm
-    fields = ["medico", "fecha_hora", "motivo",]
     template_name = "clinica/nuevo_turno.html"
     success_url = reverse_lazy("app:lista_turnos")
 
