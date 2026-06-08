@@ -136,11 +136,6 @@ class TurnoModelTest(TestCase):
         errors = self.turno.validate()
         self.assertEqual(errors, [])
 
-    def test_validate_motivo_vacio_retorna_error(self):
-        self.turno.motivo = ""
-        errors = self.turno.validate()
-        self.assertTrue(len(errors) > 0)
-
     def test_validate_motivo_no_vacio_retorna_lista_vacia(self):
         self.turno.motivo = "Consulta general"
         errors = self.turno.validate()

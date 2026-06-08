@@ -1,39 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}Nuevo turno — TurnoYa{% endblock %}
+{% block title %}
+{% if object %}Editar turno{% else %}Nuevo turno{% endif %}
+{% endblock %}
 
 {% block content %}
-<h1>Nuevo turno</h1>
+<div class="row-justify-content-center">
+  <div class="col-md-8">
+    <h1 class="mb-4">
+      {% if object %}Editar turno de<em>{{object.str}}</em>{% else %}Nuevo turno{% endif %}
+    </h1>
+  </div>
 
-{% if messages %}
+  {% if messages %}
   {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
   {% endfor %}
-{% endif %}
+  {% endif %}
 
-<form method="post" novalidate>
-  {% csrf_token %}
-  {{ form.non_field_errors }}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
 
-  <div class="form-group">
-    {{ form.medico.label_tag }}
-    {{ form.medico }}
-    {{ form.medico.errors }}
-  </div>
+    <!-- Campos del formulario -->
+    {% for field in form %}
+    <div class="row mb-3">
+      <label class="col-sm-2 col-form-label fw-semibold">{{ field.label }}</label>
+      <div class="col-sm-10">{{ field }} </div>
+      {% if field.errors %}
+      <div class="text-danger, invalid-feedback d-block">
+        {{ field.errors }} </div>
+      {% endif %}
+    </div>
+    {% endfor %}
 
-  <div class="form-group">
-    {{ form.fecha_hora.label_tag }}
-    {{ form.fecha_hora}}
-    {{ form.fecha_hora.errors }}
-  </div>
-
-  <div class="form-group">
-    {{ form.motivo.label_tag }}
-    {{ form.motivo }}
-    {{ form.motivo.errors }}
-  </div>
-
-  <button type="submit" class="btn btn-primary">Pedir turno</button>
-  <a href="{% url 'app:lista_turnos' %}" class="btn btn-link">Volver</a>
-</form>
-{% endblock %}
+    <!-- Botones -->
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">
+        {% if object %}Guardar cambios{% else %}Crear turno{% endif %}
+      </button>
+      <a href="{% url 'app:lista_turnos' %}" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+  </form>
+  {% endblock %}
