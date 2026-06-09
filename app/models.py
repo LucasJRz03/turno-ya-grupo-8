@@ -215,12 +215,13 @@ class Turno(models.Model):
     medico = models.ForeignKey("Medico", on_delete=models.CASCADE)
     paciente = models.ForeignKey("Paciente", on_delete=models.CASCADE)
     fecha_hora = models.DateTimeField()
-    motivo = models.TextField()
+    motivo = models.TextField(blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="PENDIENTE")
 
     def __str__(self):
         return f"Turno de {self.paciente} con {self.medico} el {self.fecha_hora.strftime('%Y-%m-%d %H:%M')}"
-        
+
+    @classmethod 
     def validate(self):
         """Valida los datos del turno. Retorna una lista de errores."""
         errors = []
@@ -228,8 +229,8 @@ class Turno(models.Model):
         if self.fecha_hora < timezone.now():
             errors.append("La fecha y hora del turno no pueden ser en el pasado.")
 
-        if not self.motivo or not self.motivo.strip():
-            errors.append("El motivo del turno es obligatorio.")
+        if self.motivo and len(self.motivo) > 200:
+            errors.append("El motivo del turno no puede exceder los 200 caracteres.")
 
         if self.estado not in dict(self.ESTADO_CHOICES):
             errors.append(f"El estado del turno debe ser uno de: {', '.join(dict(self.ESTADO_CHOICES).keys())}.")

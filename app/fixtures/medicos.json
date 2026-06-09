@@ -2,21 +2,21 @@
   {
     "model": "app.medico",
     "pk": 1,
-    "fields": { "nombre": "Ana", "apellido": "García", "matricula": "MP-1001", "especialidad": "Clínica Médica" }
+    "fields": { "nombre": "Ana", "apellido": "García", "matricula": "MP-1001", "especialidad": 1 }
   },
   {
     "model": "app.medico",
     "pk": 2,
-    "fields": { "nombre": "Carlos", "apellido": "López", "matricula": "MP-1002", "especialidad": "Pediatría" }
+    "fields": { "nombre": "Carlos", "apellido": "López", "matricula": "MP-1002", "especialidad": 2 }
   },
   {
     "model": "app.medico",
     "pk": 3,
-    "fields": { "nombre": "Sofía", "apellido": "Martínez", "matricula": "MP-1003", "especialidad": "Cardiología" }
+    "fields": { "nombre": "Sofía", "apellido": "Martínez", "matricula": "MP-1003", "especialidad": 3 }
   },
   {
     "model": "app.medico",
     "pk": 4,
-    "fields": { "nombre": "Juan", "apellido": "Pérez", "matricula": "MP-1004", "especialidad": "Clínica Médica" }
+    "fields": { "nombre": "Juan", "apellido": "Pérez", "matricula": "MP-1004", "especialidad": 1 }
   }
 ]
