@@ -8,7 +8,7 @@ class TurnoForm(forms.ModelForm):
         fields = ["medico", "fecha_hora", "motivo"]
         widgets = {
             "medico": forms.Select(attrs={"class": "form-select"}),
-            "fecha_hora": forms.DateTimeInput(attrs={"class": "form-control", "type": "datetime-local", "step": "2400"}),
+            "fecha_hora": forms.DateTimeInput(attrs={"class": "form-control", "type": "datetime-local", "step": "900"}),
             "motivo": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Ingrese su consulta"}),
             }
         labels = {
