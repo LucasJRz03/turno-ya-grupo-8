@@ -12,7 +12,7 @@ class EspecialidadAdmin(admin.ModelAdmin):
 class MedicoAdmin(admin.ModelAdmin):
     list_display = ("apellido", "nombre", "matricula", "especialidad")
     search_fields = ("apellido", "nombre", "matricula")
-    list_filter = ("especialidad")
+    list_filter = ("especialidad",)
     ordering = ("apellido", "nombre")
 
 @admin.register(Paciente)
