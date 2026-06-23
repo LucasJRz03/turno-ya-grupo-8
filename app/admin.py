@@ -1,7 +1,30 @@
 """Configuración básica del admin para los modelos de la app."""
 
 from django.contrib import admin
-from .models import Medico
+from unfold.admin import ModelAdmin 
+from .models import Medico, Especialidad, Paciente, Turno
 
-# TODO: reemplazar por @admin.register con list_display, list_filter, search_fields
-admin.site.register(Medico)
+
+@admin.register(Especialidad)
+class EspecialidadAdmin(ModelAdmin):
+    list_display = ( "nombre", "descripcion")
+    search_fields = ("nombre",)
+
+@admin.register(Medico)
+class MedicoAdmin(ModelAdmin):
+    list_display = ("apellido", "nombre", "matricula", "especialidad")
+    search_fields = ("apellido", "nombre", "matricula")
+    list_filter = ("especialidad",)
+    ordering = ("apellido", "nombre")
+
+@admin.register(Paciente)
+class PacienteAdmin(ModelAdmin):
+    list_display = ("apellido", "nombre", "dni", "email", "telefono")
+    search_fields = ("apellido", "nombre", "dni")
+
+@admin.register(Turno)
+class TurnoAdmin(ModelAdmin):
+    list_display = ("fecha_hora", "medico", "paciente","estado")
+    list_filter = ("estado", "fecha_hora", "medico")
+    search_fields = ("paciente__apellido", "paciente__dni","medico__apellido", "motivo")
+    date_hierarchy = "fecha_hora"
