@@ -221,7 +221,6 @@ class Turno(models.Model):
     def __str__(self):
         return f"Turno de {self.paciente} con {self.medico} el {self.fecha_hora.strftime('%Y-%m-%d %H:%M')}"
 
-    @classmethod 
     def validate(self):
         """Valida los datos del turno. Retorna una lista de errores."""
         errors = []

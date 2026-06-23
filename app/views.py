@@ -14,6 +14,16 @@ class HomeView(TemplateView):
 
     template_name = "clinica/home.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['total_medicos'] = Medico.objects.count()
+        context['total_pacientes'] = Paciente.objects.count()
+        context['total_turnos'] = Turno.objects.count()
+
+        context['turnos_pendientes'] = Turno.objects.filter(estado='PENDIENTE').count()
+    
+        return context
 
 class MedicoListView(ListView):
     """Lista todos los médicos."""
