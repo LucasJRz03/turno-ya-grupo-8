@@ -48,8 +48,6 @@ class Medico(models.Model):
     apellido = models.CharField(max_length=100)
     matricula = models.CharField(max_length=20, unique=True)
     especialidad = models.ForeignKey('Especialidad', on_delete=models.PROTECT, related_name='medicos')
-    obra_sociales = models.ManyToManyField('ObraSocial', blank=True, relate_name='medicos')
-
     class Meta:
         ordering = ["apellido", "nombre"]
 
@@ -259,13 +257,13 @@ class Turno(models.Model):
 
 
 class Ausencia(models.Model): 
-    medico = models.ForeignKey('medicos', on_delete=models.CASCADE, relate_name='ausencias')
+    medico = models.ForeignKey('Medico', on_delete=models.CASCADE, related_name='ausencias')
     motivo = models.CharField(max_length=100)
     fecha_inicio = models.DateField()
-    fehca_fin = models.DateField()
+    fecha_fin = models.DateField()
 
     def __str__(self):
-        return f"Ausencia de Dr/a {self.medico}, fecha:{self.fecha_inicio.strftime('%Y-%m-%d %H:%M')}"
+        return f"Ausencia de Dr/a {self.medico}, fecha:{self.fecha_inicio.strftime('%Y-%m-%d')}"
 
     def validate(self):
         """solo valida, nunca toca la BD, retorna un list[str]"""
@@ -296,10 +294,12 @@ class Ausencia(models.Model):
         ausencia.save()
         return ausencia, []
 
-    @classmethod
-    def update(self, medico, motivo, fecha_inicio, fecha_fin): 
-        errors = self.__class__validate(medico, motivo, fecha_inicio, fecha_fin)
-       
+    def update(self, **kwargs): 
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+        
+        errors = self.validate()
+    
         if errors:
             return errors
 
@@ -312,7 +312,6 @@ class ObraSocial(models.Model):
     requiere_token = models.BooleanField(default=False)
     medicos_disponibles = models.ManyToManyField('Medico', related_name='obra_sociales', blank=True)
 
-    @classmethod
     def validate(self):
         """Solo valida, nunca toca la BD, retorna list[str]."""
         errors = []

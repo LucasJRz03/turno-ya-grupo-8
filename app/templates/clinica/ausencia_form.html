@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Ausencia - TurnoYa{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><li class="bi bi-calendar-x"></li> Registrar Ausencia Médica</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                       <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                               <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                       </div>
+                    {% endif %}
+
+                    {{ form.as_p }}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-danger">Guardar Ausencia</button>
+                        <a href="{% url 'app:lista_medicos'%}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,7 +14,9 @@
         <th>Apellido y nombre</th>
         <th>Matrícula</th>
         <th>Especialidad</th>
-        <!-- TODO: agregar columna de acciones cuando implementen detalle_medico -->
+        {% if user.is_staff %}
+        <th>Acciones</th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
@@ -23,10 +25,22 @@
         <td>{{ medico }}</td>
         <td><code>{{ medico.matricula }}</code></td>
         <td>{{ medico.especialidad }}</td>
+
+        {% if user.is_staff %}
+        <td>
+          <a href="{% url 'app:detalle_medico' medico.pk %}" class="btn btn-sm btn-outline primary">
+            Ver detalle
+          </a>
+        </td>
+        {% endif %}
       </tr>
       {% empty %}
       <tr>
+       {% if user.is_staff %}
+        <td colspan="4" class="text-center text-muted">No hay médicos cargados.</td>
+       {% else %}
         <td colspan="3" class="text-center text-muted">No hay médicos cargados.</td>
+       {% endif %}
       </tr>
       {% endfor %}
     </tbody>

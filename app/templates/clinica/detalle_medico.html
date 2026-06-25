@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle - Dr/a. {{ medico.apellido }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-badge"></i> Perfil Profesional</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ medico.nombre }} {{ medico.apellido }}</h3>
+                    <p class="text-muted mb-1">{{ medico.especialidad.nombre }}</p>
+                    <span class="badge bg-secondary mb-3">Matrícula: {{ medico.matricula }}</span>
+                    <hr>
+                    <p class="mb-0"><strong>Turnos históricos:</strong> {{ medico.cantidad_turnos }}</p>
+                </div>
+            </div>           
+        </div>
+
+        <div class="col-md-8">
+            
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-hospital"></i> Obras Sociales que atiende</h5>
+                </div>
+                <div class="card-body">
+                    {% if medico.obras_sociales.all %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for obra in medico.obras_sociales.all %}
+                                <span class="badge bg-success bg-opacity-75 fs-6 p-2">
+                                    {{ obra.nombre }}
+                                    {% if obra.requiere_token %}
+                                        <i class="bi bi-shield-lock ms-1" title="Requiere Token"></i>
+                                    {% endif %}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-0">
+                            Este profesional atiende de forma particular únicamente.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-calendar-x"></i> Ausencias Programadas</h5>
+                    <a href="{% url 'app:crear_ausencia' %}" class="btn btn-sm btn-light text-danger fw-bold">
+                        + Cargar Ausencia
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if medico.ausencias.all %}
+                        <ul class="list-group list-group-flush">
+                            {% for ausencia in medico.ausencias.all %}
+                                <li class="list-group-item d-flex justify-content-between align-items-start">
+                                    <div class="ms-2 me-auto">
+                                        <div class="fw-bold">{{ ausencia.motivo }}</div>
+                                        Desde el {{ ausencia.fecha_inicio|date:"d/m/Y" }} al {{ ausencia.fecha_fin|date:"d/m/Y" }}
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill">Ausente</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            El profesional no registra ausencias programadas.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+     
+    </div>
+</div>
+
+{% endblock %}

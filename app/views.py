@@ -2,9 +2,9 @@
 
 from django.views.generic import ListView, TemplateView, CreateView, DetailView, UpdateView
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import TurnoForm
-from .models import Medico, Turno, Paciente
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from .forms import TurnoForm, AusenciaForm
+from .models import Medico, Turno, Paciente, Ausencia
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 
@@ -70,11 +70,18 @@ class PacienteListView(ListView):
     context_object_name = "pacientes"
     ordering = ['apellido', 'nombre'] # Ordenar por apellido y nombre 
 
-class MedicoDetailView(DetailView):
-    """Muestra el detalle de un médico"""
+class MedicoDetailView(UserPassesTestMixin, DetailView):
+    """Vista para ver el detalle de un médico, sus obras sociales y ausencias"""
     model = Medico
     template_name = "clinica/detalle_medico.html"
     context_object_name = "medico"
+
+    def test_func(self):
+        """
+        Condición de seguridad del UserPassesTestMixin.
+        Si retorna True, entra a la página. Si retorna False, tira error 403 (Prohibido.
+        """
+        return self.request.user.is_authenticated and self.request.user.is_staff
 
 class TurnoCancelView(LoginRequiredMixin, UpdateView):
     """Vista para cancelar un turno existente."""
@@ -93,6 +100,27 @@ class TurnoCancelView(LoginRequiredMixin, UpdateView):
         
         return HttpResponseRedirect(reverse("app:lista_turnos"))
 
+class AusenciaCreateView(LoginRequiredMixin, CreateView):
+    """Vista para que el personal cargue una nueva ausencia de un médico."""
+    model = Ausencia
+    template_name = "clinica/ausencia_form.html"
+    form_class = AusenciaForm
+    success_url = reverse_lazy('app:lista_medicos')
 
+    def form_valid(self, form):
+        medico = form.cleaned_data['medico']
+        motivo = form.cleaned_data['motivo']
+        fecha_inicio = form.cleaned_data['fecha_inicio']
+        fecha_fin = form.cleaned_data['fecha_fin']
 
+        instancia, errores = Ausencia.new(medico,motivo,fecha_inicio, fecha_fin)
 
+        if errores:
+            for error in errores:
+                form.add_error(None,error)
+            return self.form_invalid(form)
+        
+        # Solución del problema de copiado de django
+        self.object = instancia
+        return HttpResponseRedirect(self.get_success_url())
+    

@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from unfold.admin import ModelAdmin 
-from .models import Medico, Especialidad, Paciente, Turno
+from .models import Medico, Especialidad, Paciente, Turno, ObraSocial, Ausencia
 
 
 @admin.register(Especialidad)
@@ -28,3 +28,15 @@ class TurnoAdmin(ModelAdmin):
     list_filter = ("estado", "fecha_hora", "medico")
     search_fields = ("paciente__apellido", "paciente__dni","medico__apellido", "motivo")
     date_hierarchy = "fecha_hora"
+
+@admin.register(ObraSocial)
+class ObraSocialAdmin(ModelAdmin):
+    list_display = ("nombre", "sitio_web", "requiere_token")
+    search_field = ("nombre",)
+    filter_horizontal = ("medicos_disponibles",)
+
+@admin.register(Ausencia)
+class AusenciaAdmin(ModelAdmin):
+    list_display = ("medico", "fecha_inicio", "fecha_fin", "motivo")
+    list_filter = ("medico", "fecha_inicio")
+
