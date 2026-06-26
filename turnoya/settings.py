@@ -9,14 +9,16 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "unfold",
+    "accounts",
     "app",
+    
 ]
 
 MIDDLEWARE = [
@@ -58,10 +60,14 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+SESSION_COOKIE_HTTPONLY = True # Previene XSS. No permite acceso a la cookie de sesión desde JavaScript.
+CSRF_COOKIE_HTTPONLY = True # Evita que javaScript acceda a la cookie CSRF, reduciendo riesgo de ataques XSS.
+
 
 LANGUAGE_CODE = "es-ar"
 TIME_ZONE = "America/Argentina/Buenos_Aires"
@@ -75,7 +81,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Autenticación
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/app/templates/clinica/home/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 UNFOLD = {
@@ -108,3 +114,5 @@ UNFOLD = {
         }
     }
 }
+
+AUTH_USER_MODEL = "accounts.CustomUser" # Indica que se usará el modelo de usuario personalizado definido en accounts/models.py
