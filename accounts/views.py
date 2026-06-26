@@ -50,3 +50,18 @@ class RegisterView(CreateView):
         """Muestra un mensaje de error si el formulario no es válido."""
         messages.error(self.request, "Error en el formulario. Corregi los errores e inténtalo de nuevo.")
         return super().form_invalid(form)
+class PerfilView(LoginRequiredMixin, UpdateView):
+    """Vista de perfil del usuario autenticado."""
+
+    model = CustomUser
+    form_class = PerfilForm
+    template_name = "accounts/perfil.html"
+    success_url = reverse_lazy("accounts:perfil")
+
+    def get_object(self, queryset = None):
+        """"Retorna el usuario logueado"""
+        return self.request.user
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Perfil actualizado correctamente.")
+        return super().form_valid(form)
