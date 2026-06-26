@@ -1,68 +1,52 @@
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.views import LoginView as DjangoLoginView
+from django.contrib.auth.views import LogoutView as DjangoLogoutView
+from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView, UpdateView
 from django.contrib import messages
-from django.views.generic import FormView, RedirectView
 from django.urls import reverse_lazy
-from .forms import CustomUserCreationForm, LoginForm
+from .forms import CustomUserCreationForm, PerfilForm
 from .models import CustomUser
-
-class LoginView(FormView):
+class LoginView(DjangoLoginView):
     """Vista para manejar el inicio de sesión de los usuarios."""
 
     template_name = "accounts/login.html"
-    form_class = LoginForm
+    redirect_authenticated_user = True
     success_url = reverse_lazy("app:home")
 
     def form_valid(self, form):
-        """Autentica al usuario y lo redirige a la página principal si las credenciales son correctas."""
-        #Recupera el nombre de usuario y la contraseña del formulario
-        username = form.cleaned_data.get("username")
-        password = form.cleaned_data.get("password")
-
-        #Autentica al usuario usando las credenciales proporcionadas
-        user = authenticate(self.request, username=username, password=password)
-        if user is not None:
-            #Si el usuario es válido, inicia sesión y muestra un mensaje de bienvenida
-            login(self.request, user)
-            messages.success(self.request, f"Bienvenido, {user.username}!")
-            return super().form_valid(form)
-        else:
-            #Si las credenciales son inválidas, muestra un mensaje de error
-            messages.error(self.request, "Credenciales inválidas. Por favor, inténtalo de nuevo.")
-            return self.form_invalid(form)
-        
+        """Muestra un mensaje de bienvenida si el formulario es valido."""
+        messages.success(self.request, f"Bienvenido, {self.request.user.username}!")
+        return super().form_valid(form)
+      
     def form_invalid(self, form):
         """Muestra un mensaje de error si el formulario no es válido."""
-        messages.error(self.request, "Error en el formulario. Por favor, corrige los errores e inténtalo de nuevo.")
-        #Vuelve a renderizar la página con el formulario y los mensajes de error
-        return self.render_to_response(self.get_context_data(form=form))
+        messages.error(self.request, "Credenciales inválidas. Verificá tu usuario y contraseña.")
+        return super().form_invalid(form)
+    
+class LogoutView(DjangoLogoutView):
+    """Vista de logout"""
+    pass
 
-class LogoutView(RedirectView):
-    """Vista para manejar el cierre de sesión de los usuarios."""
+class RegisterView(CreateView):
+    """Vista de registro de nuevos usuarios."""
 
-    url = reverse_lazy("app:home")
-
-    def get(self, request, *args, **kwargs):
-        """Cierra la sesión del usuario y redirige a la página de inicio de sesión."""
-        logout(request)
-        messages.info(request, "Has cerrado sesión correctamente.")
-        return super().get(request, *args, **kwargs)
-
-class RegisterView(FormView):
-    """Vista para manejar el registro de nuevos usuarios."""
-
-    template_name = "accounts/register.html"
+    model = CustomUser
     form_class = CustomUserCreationForm
+    template_name = "accounts/register.html"
     success_url = reverse_lazy("app:home")
 
     def form_valid(self, form):
-        """Crea un nuevo usuario con TODOS los datos del formulario y lo autentica."""
-        user = form.save()
+        """Crea un nuevo usuario y lo autentica."""
+        user = form.save(commit=False)
+        user.tipo_usuario = 'paciente'
+        user.save()
+        #Auto-login despues del registro
         login(self.request, user)
         messages.success(self.request, f"Bienvenido, {user.username}! Tu cuenta ha sido creada correctamente.")
         return super().form_valid(form)
 
     def form_invalid(self, form):
         """Muestra un mensaje de error si el formulario no es válido."""
-        messages.error(self.request, "Error en el formulario. Por favor, corrige los errores e inténtalo de nuevo.")
-        return self.render_to_response(self.get_context_data(form=form))
+        messages.error(self.request, "Error en el formulario. Corregi los errores e inténtalo de nuevo.")
+        return super().form_invalid(form)
