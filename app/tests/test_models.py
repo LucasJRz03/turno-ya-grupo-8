@@ -2,10 +2,11 @@
 
 from django.test import TestCase
 from app.models import Medico, Turno, Paciente, Especialidad, Ausencia, ObraSocial
-from django.contrib.auth import get_user_model
-User = get_user_model()
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 
 
 class MedicoModelTest(TestCase):

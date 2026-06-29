@@ -21,9 +21,11 @@
             <li class="nav-item">
               <a class="nav-link" href="{% url 'app:lista_medicos' %}">Médicos</a>
             </li>  
+            {% if user.is_staff %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'app:lista_pacientes' %}">Pacientes</a>
             </li>
+            {% endif %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'app:lista_turnos' %}">Turnos</a>
             </li>

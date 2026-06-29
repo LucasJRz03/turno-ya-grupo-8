@@ -16,13 +16,20 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
-        context['total_medicos'] = Medico.objects.count()
-        context['total_pacientes'] = Paciente.objects.count()
-        context['total_turnos'] = Turno.objects.count()
-
-        context['turnos_pendientes'] = Turno.objects.filter(estado='PENDIENTE').count()
-    
+        if user.is_authenticated:
+            # Datos para Administradores y Staff
+            if user.is_staff:
+                context['total_medicos'] = Medico.objects.count()
+                context['total_pacientes'] = Paciente.objects.count()
+                context['total_turnos'] = Turno.objects.count()
+                context['turnos_pendientes'] = Turno.objects.filter(estado='PENDIENTE').count()
+            
+            # Datos específicos para Pacientes
+            elif hasattr(user, 'paciente'):
+                context['mis_turnos'] = Turno.objects.filter(paciente=user.paciente).order_by('fecha_hora')
+        
         return context
 
 class MedicoListView(ListView):

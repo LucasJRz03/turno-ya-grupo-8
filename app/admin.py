@@ -17,10 +17,29 @@ class MedicoAdmin(ModelAdmin):
     list_filter = ("especialidad",)
     ordering = ("apellido", "nombre")
 
+    # Customización para el formulario. Agrupa los campos en secciones visuales.
+    fieldsets = (
+        ("Información Personal", {
+            "fields": ("nombre", "apellido", "usuario")
+        }),
+        ("Información Profesional", {
+            "fields": ("matricula", "especialidad")
+        })
+    )
+
 @admin.register(Paciente)
 class PacienteAdmin(ModelAdmin):
     list_display = ("apellido", "nombre", "dni", "email", "telefono")
     search_fields = ("apellido", "nombre", "dni")
+    
+    fieldsets = (
+        ("Datos Identificatorios",{
+            "fields": ("nombre", "apellido", "dni", "usuario")
+        }),
+        ("información de Contacto", {
+            "fields": ("email", "telefono")
+        }),
+    )
 
 @admin.register(Turno)
 class TurnoAdmin(ModelAdmin):
@@ -29,10 +48,19 @@ class TurnoAdmin(ModelAdmin):
     search_fields = ("paciente__apellido", "paciente__dni","medico__apellido", "motivo")
     date_hierarchy = "fecha_hora"
 
+    fieldsets = (
+        ("Asignación de Turnos", {
+            "fields":("medico", "paciente")
+        }),
+        ("Detalles de la Cita", {
+            "fields": ("fecha_hora", "motivo", "estado")
+        }),
+    )
+
 @admin.register(ObraSocial)
 class ObraSocialAdmin(ModelAdmin):
     list_display = ("nombre", "sitio_web", "requiere_token")
-    search_field = ("nombre",)
+    search_fields = ("nombre",)
     filter_horizontal = ("medicos_disponibles",)
 
 @admin.register(Ausencia)
