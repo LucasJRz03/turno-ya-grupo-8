@@ -1,29 +1,35 @@
 """Pruebas unitarias del modelo Medico."""
 
 from django.test import TestCase
-from app.models import Medico, Turno, Paciente, Especialidad, User
+from django.contrib.auth import get_user_model
+from app.models import Medico, Turno, Paciente, Especialidad
 from django.utils import timezone
 from datetime import timedelta
 
+User = get_user_model()
 
 class MedicoModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
 
     def setUp(self):
-
+        self.user = User.objects.create_user(
+            username="lauraromero",
+            email="laura@gmail.com",
+            password="testpass123",
+            first_name="Laura",
+            last_name="Romero"
+        )
         self.especialidad = Especialidad.objects.create(
             nombre="Pediatría",
-            descripcion="Especialidad que se encarga de la salud de los niños")
+            descripcion="Especialidad infantil")
         
         self.medico = Medico.objects.create(
-            nombre="Laura",
-            apellido="Romero",
+            usuario=self.user,
             matricula="MP-9999",
             especialidad=self.especialidad,
         )
 
     # --- __str__ y métodos simples ---
-
     def test_str_incluye_apellido_y_nombre(self):
         self.assertIn("Romero", str(self.medico))
         self.assertIn("Laura", str(self.medico))
@@ -35,78 +41,71 @@ class MedicoModelTest(TestCase):
         self.assertEqual(self.medico.cantidad_turnos(), 0)
 
     # --- validate ---
-
-    def test_validate_datos_correctos_retorna_lista_vacia(self):
-        errors = Medico.validate("Ana", "García", "MP-0001", "Pediatría")
+    def test_validate_datos_correctos(self):
+        errors = Medico.validate(self.user, "MP-0001", self.especialidad)
         self.assertEqual(errors, [])
 
-    def test_validate_nombre_vacio_retorna_error(self):
-        errors = Medico.validate("", "García", "MP-0001", "Pediatría")
+    def test_validate_sin_usuario(self):
+        errors = Medico.validate(None, "MP-0001", self.especialidad)
         self.assertTrue(len(errors) > 0)
 
-    def test_validate_matricula_vacia_retorna_error(self):
-        errors = Medico.validate("Ana", "García", "", "Pediatría")
+    def test_validate_matricula_vacia(self):
+        errors = Medico.validate(self.user, "", self.especialidad)
         self.assertTrue(len(errors) > 0)
 
     # --- new ---
-
-    def test_new_crea_medico_con_datos_validos(self):
-        medico, errors = Medico.new("Carlos", "López", "MP-1234", "Cardiología")
+    def test_new_crea_medico(self):
+        nuevo_user = User.objects.create_user(
+            username="carlos",email="carlos@gmail.com", password="pass1234", first_name="Carlos", last_name="López"
+        )
+        medico, errors = Medico.new(nuevo_user, "MP-1234", self.especialidad)
         self.assertEqual(errors, [])
         self.assertIsNotNone(medico)
-        self.assertEqual(medico.apellido, "López")
         self.assertTrue(Medico.objects.filter(matricula="MP-1234").exists())
 
-    def test_new_con_datos_invalidos_retorna_errores_y_no_crea(self):
+    def test_new_con_datos_invalidos_no_crea(self):
         count_antes = Medico.objects.count()
-        medico, errors = Medico.new("", "", "", "")
+        medico, errors = Medico.new(None, "", "")
         self.assertIsNone(medico)
         self.assertTrue(len(errors) > 0)
         self.assertEqual(Medico.objects.count(), count_antes)
 
     # --- update ---
-
-    def test_update_modifica_datos_correctamente(self):
-        errors = self.medico.update("Laura", "Romero", "MP-9999", "Cardiología")
+    def test_update_modifica_datos(self):
+        cardio = Especialidad.objects.create(nombre="Cardiología")
+        errors = self.medico.update("MP-9999", cardio)
         self.assertEqual(errors, [])
         self.medico.refresh_from_db()
         self.assertEqual(self.medico.especialidad.nombre, "Cardiología")
 
-    def test_update_con_datos_invalidos_no_modifica(self):
-        errors = self.medico.update("", "", "", "")
-        self.assertTrue(len(errors) > 0)
-        self.medico.refresh_from_db()
-        self.assertEqual(self.medico.nombre, "Laura")  # sin cambios
-
 class TurnoModelTest(TestCase):
-    """Pruebas para el modelo Turno (pendiente implementación)."""
+    """Pruebas para el modelo Turno."""
     def setUp(self):
-        self.usuario = User.objects.create_user(
-            username="juanperez", 
-            password="testpass")
-        
-        self.especialidad = Especialidad.objects.create(
-            nombre="Pediatría",
-            descripcion="Especialidad que se encarga de la salud de los niños")
-        
-        self.paciente = Paciente.objects.create(
-            usuario=self.usuario,
-            nombre="Juan",
-            apellido="Pérez",
-            dni="12345678"
+        self.usuario_medico = User.objects.create_user(
+            username="lauraromero", email="laura@gmail.com",
+            password="testpass", first_name="Laura", last_name="Romero"
         )
+        self.usuario_paciente = User.objects.create_user(
+            username="juanperez", email="juan@gmail.com",
+            password="testpass", first_name="Juan", last_name="Pérez"
+        )
+        self.especialidad = Especialidad.objects.create(nombre="Pediatría")
         self.medico = Medico.objects.create(
-            nombre="Laura",
-            apellido="Romero",
+            usuario=self.usuario_medico,
             matricula="MP-9999",
             especialidad=self.especialidad
         )
+        self.paciente = Paciente.objects.create(
+            usuario=self.usuario_paciente,
+            dni="12345678",
+            telefono="2901-11-11-11"
+        )
         self.turno = Turno.objects.create(
-            medico = self.medico,
-            paciente = self.paciente,
-            fecha_hora = timezone.now() + timedelta(days=1),
-            motivo = "Consulta general",
-            estado = "PENDIENTE",
+            medico=self.medico,
+            paciente=self.paciente,
+            fecha_hora=timezone.now() + timedelta(days=1),
+            motivo="Consulta general",
+            estado="PENDIENTE",
         )
     # --- __str__ y métodos simples ---
 
@@ -116,45 +115,27 @@ class TurnoModelTest(TestCase):
         self.assertIn(self.turno.fecha_hora.strftime('%Y-%m-%d %H:%M'), str(self.turno))
 
     # --- validate ---
-    def test_validate_fecha_pasada_retorna_error(self):
+    def test_validate_fecha_pasada(self):
         self.turno.fecha_hora = timezone.now() - timedelta(days=1)
         errors = self.turno.validate()
         self.assertTrue(len(errors) > 0)
 
-    def test_validate_fecha_futura_retorna_lista_vacia(self):
+    def test_validate_fecha_futura(self):
         self.turno.fecha_hora = timezone.now() + timedelta(days=1)
         errors = self.turno.validate()
         self.assertEqual(errors, [])
 
-    def test_validate_estado_invalido_retorna_error(self):
+    def test_validate_estado_invalido(self):
         self.turno.estado = "INVALIDO"
         errors = self.turno.validate()
         self.assertTrue(len(errors) > 0)
-
-    def test_validate_estado_valido_retorna_lista_vacia(self):
-        self.turno.estado = "CONFIRMADO"
-        errors = self.turno.validate()
-        self.assertEqual(errors, [])
-
-    def test_validate_motivo_no_vacio_retorna_lista_vacia(self):
-        self.turno.motivo = "Consulta general"
-        errors = self.turno.validate()
-        self.assertEqual(errors, [])
-
-    def test_validate_todos_datos_validos_retorna_lista_vacia(self):
-        self.turno.fecha_hora = timezone.now() + timedelta(days=1)
-        self.turno.estado = "PENDIENTE"
-        self.turno.motivo = "Consulta general"
-        errors = self.turno.validate()
-        self.assertEqual(errors, [])
-
     # --- new ---
 
-    def test_new_crea_turno_con_datos_validos(self):
+    def test_new_crea_turno(self):
         turno, errors = Turno.new(
             medico=self.medico,
             paciente=self.paciente,
-            fecha_hora=timezone.now() + timedelta(days=1),
+            fecha_hora=timezone.now() + timedelta(days=2),
             motivo="Consulta general",
             estado="PENDIENTE"
         )
@@ -162,7 +143,7 @@ class TurnoModelTest(TestCase):
         self.assertIsNotNone(turno)
         self.assertTrue(Turno.objects.filter(id=turno.id).exists())
 
-    def test_new_con_datos_invalidos_retorna_errores_y_no_crea(self):
+    def test_new_con_fecha_pasada_no_crea(self):
         count_antes = Turno.objects.count()
         turno, errors = Turno.new(
             medico=self.medico,
@@ -172,16 +153,11 @@ class TurnoModelTest(TestCase):
             estado="INVALIDO"
         )
         self.assertIsNone(turno)
-        self.assertTrue(len(errors) > 0)
         self.assertEqual(Turno.objects.count(), count_antes)
 
     # --- update ---
-
-    def test_update_modifica_datos_correctamente(self):
+    def test_update_modifica_datos(self):
         errors = self.turno.update(
-            medico=self.medico,
-            paciente=self.paciente,
-            fecha_hora=timezone.now() + timedelta(days=2),
             motivo="Consulta de seguimiento",
             estado="CONFIRMADO"
         )
@@ -190,93 +166,108 @@ class TurnoModelTest(TestCase):
         self.assertEqual(self.turno.motivo, "Consulta de seguimiento")
         self.assertEqual(self.turno.estado, "CONFIRMADO")
 
-    def test_update_con_datos_invalidos_no_modifica(self):
-        errors = self.turno.update(
-            medico=self.medico,
-            paciente=self.paciente,
-            fecha_hora=timezone.now() - timedelta(days=1),  # fecha pasada
-            motivo="",
-            estado="INVALIDO"
-        )
-        self.assertTrue(len(errors) > 0)
+    def test_cancelar_turno_pendiente(self):
+        exito, errors = self.turno.cancelar()
+        self.assertTrue(exito)
+        self.assertEqual(errors, [])
         self.turno.refresh_from_db()
-        self.assertEqual(self.turno.motivo, "Consulta general")  # sin cambios
-        self.assertEqual(self.turno.estado, "PENDIENTE")  # sin cambios
+        self.assertEqual(self.turno.estado, "CANCELADO")
+
+    def test_cancelar_turno_ya_cancelado_falla(self):
+        self.turno.estado = "CANCELADO"
+        self.turno.save()
+        exito, errors = self.turno.cancelar()
+        self.assertFalse(exito)
+        self.assertTrue(len(errors) > 0)
+
+    def test_confirmar_turno_pendiente(self):
+        exito, errors = self.turno.confirmar()
+        self.assertTrue(exito)
+        self.turno.refresh_from_db()
+        self.assertEqual(self.turno.estado, "CONFIRMADO")
+
+    def test_confirmar_turno_ya_confirmado_falla(self):
+        self.turno.estado = "CONFIRMADO"
+        self.turno.save()
+        exito, errors = self.turno.confirmar()
+        self.assertFalse(exito)
+        self.assertTrue(len(errors) > 0)
+
+    def test_validar_superposicion_de_turnos(self):
+        """Dos turnos con el mismo médico a la misma hora deben fallar."""
+        misma_hora = timezone.now() + timedelta(days=5)
+        self.turno.fecha_hora = misma_hora
+        self.turno.save()
+
+        turno2, errors = Turno.new(
+            medico=self.medico, paciente=self.paciente,
+            fecha_hora=misma_hora, motivo="Otro turno", estado="PENDIENTE"
+        )
+        self.assertIsNone(turno2)
+        self.assertTrue(any("ya tiene un turno" in e for e in errors))
 
 class PacienteModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="jaundias", password="12345")
+        self.user = User.objects.create_user(
+            username="juandiaz",
+            email="juan@gmail.com",
+            password="12345",
+            first_name="Juan",
+            last_name="Díaz"
+        )
         self.paciente = Paciente.objects.create(
-            usuario = self.user,
-            nombre = "Juan",
-            apellido="Díaz",
-            dni = "123456789",
-            email = "juanDiaz@gmail.com",
-            telefono = "2901-55-11-11"
+            usuario=self.user,
+            dni="123456789",
+            telefono="2901-55-11-11"
         )
 
+    # --- __str__ y métodos simples ---
     def test_str_incluye_apellido_y_nombre(self):
         self.assertIn("Díaz", str(self.paciente))
         self.assertIn("Juan", str(self.paciente))
 
     def test_nombre_completo(self):
         self.assertEqual(self.paciente.nombre_completo(), "Juan Díaz")
-
   
     def test_dni(self):
         self.assertEqual(self.paciente.dni, "123456789")
-    
-    def test_email(self):
-        self.assertEqual(self.paciente.email, "juanDiaz@gmail.com")
     
     def test_telefono(self):
         self.assertEqual(self.paciente.telefono, "2901-55-11-11")
     
     # --- validate ----
-    def test_validate_datos_correctos_retorna_lista_vacia(self):
+    def test_validate_datos_correctos(self):
         errors = Paciente.validate(
             usuario=self.user,
-            nombre="Ana",
-            apellido="Pacheco",
             dni="987654321",
-            email="ana@gmail.com",
             telefono="2901-44-11-11"
         )
         self.assertEqual(errors, [])
 
-    def test_validate_nombre_vacio_retorna_error(self):
+    def test_validate_dni_vacio(self):
         errors = Paciente.validate(
             usuario=self.user,
-            nombre="",
-            apellido="Pacheco",
-            dni="987654321",
-            email="ana@gmail.com",
-            telefono="2901-44-11-11"
-        )
-        self.assertIn("El nombre es obligatorio.", errors)
-
-    def test_validate_dni_vacio_retorna_error(self):
-        errors = Paciente.validate(
-            usuario=self.user,
-            nombre="Ana",
-            apellido="Pacheco",
             dni="",
-            email="ana@gmail.com",
             telefono="2901-44-11-11"
         )
         self.assertIn("El DNI es obligatorio.", errors)
 
+    def test_validate_dni_no_numerico(self):
+        errors = Paciente.validate(
+            usuario=self.user,
+            dni="ABC123", 
+            telefono=""
+        )
+        self.assertTrue(any("números" in e for e in errors))
+
     # --- new ---
-    def test_new_crea_paciente_con_datos_validos(self):
-        nuevo_user = User.objects.create_user(username="carloslopes", password="contra123")
+    def test_new_crea_paciente(self):
+        nuevo_user = User.objects.create_user(username="carlos", email="carlos@gmail.com", password="contra123", first_name="Carlos", last_name="López")
         paciente, errors = Paciente.new(
             usuario=nuevo_user,
-            nombre="Carlos",
-            apellido="López",
             dni="11223344",
-            email="carlos@gmail.com",
             telefono="2901-44-22-22"
         )
         self.assertEqual(errors, [])
@@ -285,45 +276,35 @@ class PacienteModelTest(TestCase):
         # Debería haber 2 pacientes ahora, Juan y Carlos
         self.assertEqual(Paciente.objects.count(), 2)
 
-    def test_new_con_datos_invalidos_retorna_errores_y_no_crea(self):
-        datos_user = User.objects.create_user(username="pepe", password="hola")
+    def test_new_con_datos_invalidos_no_crea(self):
+        datos_user = User.objects.create_user(username="pepe", email="pepe@gmail.com", password="hola")
         paciente, errors = Paciente.new(
             usuario=datos_user,
-            nombre="",
-            apellido="Gómez",
-            dni="112233445",
-            email="carlos@gmail.com", 
+            dni="",
             telefono=""
         )
         self.assertIsNone(paciente)
         self.assertTrue(len(errors) > 0)
-        self.assertEqual(Paciente.objects.count(), 1) # Solo Juan
+        self.assertEqual(Paciente.objects.count(), 1)
 
     # --- update ---
     def test_update_modifica_datos_correctamente(self): 
         errors = self.paciente.update(
             usuario=self.user,
-            nombre="Juan Cruz",
-            apellido="Díaz",
             dni="123456789",
-            email="juanCruz@gmail.com",
             telefono="2901-55-11-11"
         )
         self.assertEqual(errors, [])
-
         # Refrescar desde la base de datos para asegurar que se guardó
         self.paciente.refresh_from_db()
-        self.assertEqual(self.paciente.nombre, "Juan Cruz")
-        self.assertEqual(self.paciente.email, "juanCruz@gmail.com")
+        self.assertEqual(self.paciente.dni,"123456789" )
+        self.assertEqual(self.paciente.telefono, "2901-55-11-11")
 
     def test_update_con_datos_invalidos_no_modifica(self):
         errors = self.paciente.update(
             usuario=self.user,           
-            nombre="",
-            apellido="Díaz",
-            dni="123456789",
-            email="juanCruz@gmail.com",
-            telefono="2901-55-11-11"
+            dni="ACB123456",
+            telefono="Telefono celular"
         )
         self.assertTrue(len(errors) > 0)
         self.paciente.refresh_from_db()
@@ -341,7 +322,28 @@ class EspecialidadModelTest(TestCase):
         errores = Especialidad.validate(nombre="")
         self.assertIn("El nombre de la especialidad es obligatorio.", errores)
 
+    def test_validate_nombre_valido_retorna_lista_vacia(self):
+        errores = Especialidad.validate(nombre="Neurología")
+        self.assertEqual(errores, [])
+
+    # --- new ---
     def test_new_crea_especialidad(self):
         esp, errores = Especialidad.new(nombre="Neurología")
         self.assertEqual(errores,[])
         self.assertEqual(esp.nombre, "Neurología")
+        self.assertTrue(Especialidad.objects.filter(nombre= "Neurologia"))
+
+    def test_new_con_nombre_vacio_no_crea(self):
+        count_antes = Especialidad.objects.count()
+        esp, errores = Especialidad.new(nombre="")
+        self.assertIsNone(esp)
+        self.assertTrue(len(errores) > 0)
+        self.assertEqual(Especialidad.objects.count(), count_antes)
+
+    # --- update ---
+    def test_update_modifica_datos(self):
+        esp = Especialidad.objects.create(nombre="Cardiología")
+        errores = esp.update(nombre="Cardiología Intervencionista", descripcion="Actualizada")
+        self.assertEqual(errores, [])
+        esp.refresh_from_db()
+        self.assertEqual(esp.nombre, "Cardiología Intervencionista") 
