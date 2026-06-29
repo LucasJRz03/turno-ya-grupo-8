@@ -42,12 +42,22 @@ class TurnoListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "medico"):
-            return Turno.objects.filter(medico__usuario= user).select_related("paciente")
-        elif hasattr(user, "paciente"):
-            return Turno.objects.filter(paciente__usuario=user).select_related("medico")
-        else:
-            return Turno.objects.none()
+        # Usar las propiedades del CustomUser
+        if user.es_medico:
+            try:
+                return Turno.objects.filter(
+                    medico__usuario=user
+                ).select_related("paciente__usuario")
+            except Exception:
+                return Turno.objects.none()
+        elif user.es_paciente:
+            try:
+                return Turno.objects.filter(
+                    paciente__usuario=user
+                ).select_related("medico__usuario")
+            except Exception:
+                return Turno.objects.none()
+        return Turno.objects.none()
 
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     """Vista para crear un nuevo turno."""
@@ -59,7 +69,14 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """Asigna el paciente actual al turno antes de guardarlo."""
-        form.instance.paciente = self.request.user.paciente
+        try:
+            form.instance.paciente = self.request.user.paciente
+        except Paciente.DoesNotExist:
+            messages.error(
+                self.request,
+                "Debes completar tu perfil de paciente antes de sacar un turno."
+            )
+            return self.form_invalid(form)
         messages.success(self.request, "Turno creado correctamente.")
         return super().form_valid(form)
 
@@ -70,6 +87,9 @@ class PacienteListView(ListView):
     context_object_name = "pacientes"
     ordering = ['apellido', 'nombre'] # Ordenar por apellido y nombre 
 
+    def get_queryset(self):
+        # select_related para evitar N+1 queries al acceder al usuario
+        return Paciente.objects.select_related('usuario').all()
 class MedicoDetailView(DetailView):
     """Muestra el detalle de un médico"""
     model = Medico
