@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Cancelar Turno — TurnoYa{% endblock %}
+
+{% block content %}
+<!--como una doble validación de que realmente quiere cancelar el turno-->
+<div class="container mt-5">
+    <div class="card shadow border-danger mx-auto" style="max-width: 500px;">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Cancelar Turno</h5>
+        </div>
+        <div class="card-body text-center">
+            <p>¿Estás seguro de que deseas cancelar el turno del paciente <strong>{{ turno.paciente.nombre_completo }}</strong> con el <strong>{{ turno.medico }}</strong> programado para el <strong>{{ turno.fecha_hora|date:"d/m/Y H:i" }}</strong>?</p>
+            <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <a href="{% url 'app:lista_turnos' %}" class="btn btn-outline-secondary">Volver al listado</a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i> Sí, cancelar turno
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -60,12 +60,9 @@
                         {% if turno.estado == 'PENDIENTE' %}
 
                             {% if user.is_staff or user.medico == turno.medico %}
-                                <form action="{% url 'app:confirmar_turno' turno.pk %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-success btn-sm mb-1">
-                                        <i class="bi bi-check-circle"></i> Aceptar
-                                    </button>
-                               </form>
+                              <a href="{% url 'app:confirmar_turno' turno.pk %}" class="btn btn-success btn-sm mb-1">
+                                  <i class="bi bi-check-circle"></i> Aceptar
+                              </a>
                             {% endif %}
 
                             {% if user.is_staff or user == turno.paciente.usuario or user == turno.medico.usuario %}
