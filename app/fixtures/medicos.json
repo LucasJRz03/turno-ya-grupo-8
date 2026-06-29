@@ -7,7 +7,12 @@
   {
     "model": "app.medico",
     "pk": 2,
-    "fields": { "nombre": "Carlos", "apellido": "López", "matricula": "MP-1002", "especialidad": 2 }
+    "fields": { 
+      "usuario": 4,
+      "nombre": "Carlos", 
+      "apellido": "López", 
+      "matricula": "MP-1002", 
+      "especialidad": 2 }
   },
   {
     "model": "app.medico",

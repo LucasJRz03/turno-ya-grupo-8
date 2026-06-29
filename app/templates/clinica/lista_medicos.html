@@ -21,6 +21,21 @@
     </thead>
     <tbody>
       {% for medico in medicos %}
+      <form method="GET" action="{% url 'app:lista_medicos' %}" class="mb-4">
+        <div class="input-group">
+          <select name="especialidad" class="form-select">
+            <option value="">Todas las especialidades</option>
+            {% for esp in especialidades %}
+                <option value="{{ esp.id }}" {% if request.GET.especialidad == esp.id|stringformat:"s" %}selected{% endif %}>
+                  {{ esp.nombre }}
+                </option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Filtrar
+          </button>
+        </div>
+      </form>
       <tr>
         <td>{{ medico }}</td>
         <td><code>{{ medico.matricula }}</code></td>

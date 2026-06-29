@@ -28,9 +28,9 @@
                     <h5 class="mb-0"><i class="bi bi-hospital"></i> Obras Sociales que atiende</h5>
                 </div>
                 <div class="card-body">
-                    {% if medico.obras_sociales.all %}
+                    {% if medico.obra_sociales.all %}
                         <div class="d-flex flex-wrap gap-2">
-                            {% for obra in medico.obras_sociales.all %}
+                            {% for obra in medico.obra_sociales.all %}
                                 <span class="badge bg-success bg-opacity-75 fs-6 p-2">
                                     {{ obra.nombre }}
                                     {% if obra.requiere_token %}

@@ -32,6 +32,24 @@ class MedicoListView(ListView):
     template_name = "clinica/lista_medicos.html"
     context_object_name = "medicos"
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Busca si en la URL viene un parámetro 
+        especialidad_id = self.request.GET.get('especialidad')
+
+        if especialidad_id:
+            # Si hay parámetro, filtra
+            queryset = queryset.filter(especialidad_id=especialidad_id)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        # Agrega las especialidades al contexto para poder armar el <select> en el HTML
+        context = super().get_context_data(**kwargs)
+        from .models import Especialidad
+        context['especialidades'] = Especialidad.objects.all()
+        return context
+
 
 class TurnoListView(LoginRequiredMixin, ListView):
     """Lista los turnos asociados a un paciente o medico."""
@@ -42,12 +60,21 @@ class TurnoListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        
+        # 1. Si es administrador, ve todo.
+        if user.is_staff:
+            return Turno.objects.all().select_related("paciente", "medico")
+        
+        # 2. Si es médico, solo ve lo suyo.
         if hasattr(user, "medico"):
-            return Turno.objects.filter(medico__usuario= user).select_related("paciente")
+            return Turno.objects.filter(medico__usuario=user).select_related("paciente")
+        
+        # 3. Si es paciente, solo ve lo suyo.
         elif hasattr(user, "paciente"):
             return Turno.objects.filter(paciente__usuario=user).select_related("medico")
-        else:
-            return Turno.objects.none()
+        
+        # 4. Por si no es ninguno de los otros, no ve nada.
+        return Turno.objects.none()
 
 class TurnoCreateView(LoginRequiredMixin, CreateView):
     """Vista para crear un nuevo turno."""
@@ -58,10 +85,34 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("app:lista_turnos")
 
     def form_valid(self, form):
-        """Asigna el paciente actual al turno antes de guardarlo."""
-        form.instance.paciente = self.request.user.paciente
-        messages.success(self.request, "Turno creado correctamente.")
-        return super().form_valid(form)
+       # Extrae los datos del formulario
+       medico = form.cleaned_data.get('medico')
+       fecha_hora = form.cleaned_data.get('fecha_hora')
+       motivo = form.cleaned_data.get('motivo', '')
+
+       # Obtiene el paciente logueado
+       # Si el usuario tiene el perfil de paciente creado
+       paciente = self.request.user.paciente
+
+       # Llama al patrón de creación
+       instancia, errores = Turno.new(
+        medico=medico,
+        paciente=paciente,
+        fecha_hora=fecha_hora,
+        motivo=motivo
+       )
+
+       # Maneja los errores que devuelve el modelo
+       if errores:
+           for error in errores:
+            form.add_error(None, error)
+           return self.form_invalid(form)
+
+       self.object = instancia
+       messages.success(self.request, "Turno creado correctamente.")
+       return HttpResponseRedirect(self.get_success_url())
+
+      
 
 class PacienteListView(ListView):
     """Lista todos los pacientes registrados."""
@@ -99,6 +150,24 @@ class TurnoCancelView(LoginRequiredMixin, UpdateView):
             messages.error(self.request, "No tienes permiso para cancelar el turno.")
         
         return HttpResponseRedirect(reverse("app:lista_turnos"))
+
+class TurnoConfirmarView(LoginRequiredMixin, UpdateView):
+    """Vista para que un médico confirme un turno pendiente."""
+    model = Turno
+    fields = []
+    template_name = "clinica/confirmar_turno.html"
+
+    def post(self, request, *args, **kwargs):
+        turno = self.get_object()
+
+        if request.user.is_staff or (hasattr(request.user, 'medico') and request.user.medico == turno.medico):
+            turno.confirmar()
+            messages.success(self.request, "El turno ha sido confirmado.")
+        else:
+            messages.error(self.request, "No tienes permiso para confirmar este turno.")
+        
+        return HttpResponseRedirect(reverse("app:lista_turnos"))
+    
 
 class AusenciaCreateView(LoginRequiredMixin, CreateView):
     """Vista para que el personal cargue una nueva ausencia de un médico."""

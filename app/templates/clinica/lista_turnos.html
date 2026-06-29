@@ -56,6 +56,25 @@
                            <span class="badge bg-danger px-3 py-2">Cancelado</span>
                         {% endif %}
                     </td>
+                    <td>
+                        {% if turno.estado == 'PENDIENTE' %}
+
+                            {% if user.is_staff or user.medico == turno.medico %}
+                                <form action="{% url 'app:confirmar_turno' turno.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm mb-1">
+                                        <i class="bi bi-check-circle"></i> Aceptar
+                                    </button>
+                               </form>
+                            {% endif %}
+
+                            {% if user.is_staff or user == turno.paciente.usuario or user == turno.medico.usuario %}
+                               <a href="{% url 'app:cancelar_turno' turno.pk %}" class="btn btn-danger btn-sm mb-1">
+                                  <i class="bi bi-x-circle"></i> Cancelar
+                               </a>
+                            {% endif %}
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>

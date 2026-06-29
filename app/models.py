@@ -220,40 +220,72 @@ class Turno(models.Model):
     def __str__(self):
         return f"Turno de {self.paciente} con {self.medico} el {self.fecha_hora.strftime('%Y-%m-%d %H:%M')}"
 
-    def validate(self):
+
+    @classmethod
+    def validate(cls, medico, paciente, fecha_hora, motivo="", estado="PENDIENTE"):
         """Valida los datos del turno. Retorna una lista de errores."""
         errors = []
 
-        if self.fecha_hora < timezone.now():
+        if fecha_hora < timezone.now():
             errors.append("La fecha y hora del turno no pueden ser en el pasado.")
 
-        if self.motivo and len(self.motivo) > 200:
+        if motivo and len(motivo) > 200:
             errors.append("El motivo del turno no puede exceder los 200 caracteres.")
 
-        if self.estado not in dict(self.ESTADO_CHOICES):
-            errors.append(f"El estado del turno debe ser uno de: {', '.join(dict(self.ESTADO_CHOICES).keys())}.")
+        if estado not in dict(cls.ESTADO_CHOICES):
+            errors.append(f"El estado del turno debe ser uno de: {', '.join(dict(cls.ESTADO_CHOICES).keys())}.")
+            
+        if not medico or not paciente:
+            errors.append("El médico y el paciente son obligatorios.")
 
         return errors
     
     @classmethod
-    def new(cls, **kwargs):
+    def new(cls, medico, paciente, fecha_hora, motivo="", estado="PENDIENTE"):
         """Crea un nuevo turno si los datos son válidos. Retorna (instancia, errors)."""
-        turno = cls(**kwargs)
-        errors = turno.validate()
+        errors = cls.validate(medico, paciente, fecha_hora, motivo, estado)
         if errors:
             return None, errors
-        turno.save()
+        
+        turno = cls.objects.create(
+            medico=medico,
+            paciente=paciente,
+            fecha_hora=fecha_hora,
+            motivo=motivo,
+            estado=estado
+        )
         return turno, []
         
     def update(self, **kwargs) -> list[str]: 
         """Actualiza los datos del turno si son válidos. Retorna una lista de errores."""
-        for attr, value in kwargs.items():
-            setattr(self, attr, value)
-        errors = self.validate()
+        # Arme un diccionario con los datos proyectados para validarlos ANTES de guardarlos
+        datos_futuros = {
+            "medico": self.medico,
+            "paciente": self.paciente,
+            "fecha_hora": self.fecha_hora,
+            "motivo": self.motivo,
+            "estado": self.estado
+        }
+        datos_futuros.update(kwargs)
+        
+        errors = self.__class__.validate(**datos_futuros)
         if errors:
             return errors
+            
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
         self.save()
         return []
+    
+    def cancelar(self):
+        """Cambia el estado del turno a CANCELADO."""
+        self.estado = "CANCELADO"
+        self.save()
+
+    def confirmar(self):
+        """Cambia el estado del turno a CONFIRMADO."""
+        self.estado = "CONFIRMADO"
+        self.save()
 
 
 class Ausencia(models.Model): 

@@ -1,0 +1,7 @@
+[
+    {"model": "accounts.customuser", "pk": 1, "fields": {"password": "pbkdf2_sha256$1000000$scdHGoILZd90gM4JaJDpUL$XOeer+wdZIfvdfZET5GrOQX0q5eqD3fmIxZ7SZu9rbc=", "last_login": "2026-06-28T19:38:20.454Z", "is_superuser": true, "username": "admin", "first_name": "", "last_name": "", "is_staff": true, "is_active": true, "date_joined": "2026-06-28T18:11:43.890Z", "tipo_usuario": "admin", "email": "admin@admin.com", "fecha_creacion": "2026-06-28T18:11:45.251Z", "groups": [], "user_permissions": []}}, 
+   
+    {"model": "accounts.customuser", "pk": 3, "fields": {"password": "pbkdf2_sha256$1000000$3zQiLJueIDktc1ozMRCr70$6jU8fVxFoP22t3CeEKy8kBgruhqFKNOke8oe9BnD0x4=", "last_login": "2026-06-28T19:35:56.733Z", "is_superuser": false, "username": "paciente", "first_name": "", "last_name": "", "is_staff": false, "is_active": true, "date_joined": "2026-06-28T19:35:55.397Z", "tipo_usuario": "paciente", "email": "paciente@gmail.com", "fecha_creacion": "2026-06-28T19:35:56.585Z", "groups": [], "user_permissions": []}}, 
+   
+    {"model": "accounts.customuser", "pk": 4, "fields": {"password": "pbkdf2_sha256$1000000$Grfs0kpgNkKbyC79yFTt2Z$aZJj00esmcZguzu0PYdmEBDDcz3o1rjx81jtpKILkmA=", "last_login": "2026-06-28T19:37:24.855Z", "is_superuser": false, "username": "medico", "first_name": "", "last_name": "", "is_staff": false, "is_active": true, "date_joined": "2026-06-28T19:37:00.685Z", "tipo_usuario": "medico", "email": "medico@gmail.com", "fecha_creacion": "2026-06-28T19:37:02.779Z", "groups": [], "user_permissions": []}}
+]
