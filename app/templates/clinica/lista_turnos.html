@@ -58,13 +58,14 @@
                     </td>
                     <td>
                         {% if turno.estado == 'PENDIENTE' %}
-
                             {% if user.is_staff or user.medico == turno.medico %}
                               <a href="{% url 'app:confirmar_turno' turno.pk %}" class="btn btn-success btn-sm mb-1">
                                   <i class="bi bi-check-circle"></i> Aceptar
                               </a>
                             {% endif %}
+                        {% endif %}
 
+                        {% if turno.estado == 'PENDIENTE' or turno.estado == 'CONFIRMADO' %}
                             {% if user.is_staff or user == turno.paciente.usuario or user == turno.medico.usuario %}
                                <a href="{% url 'app:cancelar_turno' turno.pk %}" class="btn btn-danger btn-sm mb-1">
                                   <i class="bi bi-x-circle"></i> Cancelar

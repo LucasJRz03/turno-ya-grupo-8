@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .forms import TurnoForm, AusenciaForm
 from .models import Medico, Turno, Paciente, Ausencia
+from django.db.models import Q
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
 
@@ -91,6 +92,16 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
     template_name = "clinica/nuevo_turno.html"
     success_url = reverse_lazy("app:lista_turnos")
 
+    def get_initial(self):
+        initial = super().get_initial()
+
+        medico_id = self.request.GET.get('medico')
+
+        if medico_id:
+            initial['medico'] = medico_id
+
+        return initial
+
     def form_valid(self, form):
        # Extrae los datos del formulario
        medico = form.cleaned_data.get('medico')
@@ -127,7 +138,22 @@ class PacienteListView(ListView):
     template_name = "clinica/lista_pacientes.html"
     context_object_name = "pacientes"
     ordering = ['apellido', 'nombre'] # Ordenar por apellido y nombre 
+    paginate_by = 10 # Páginas de 10 pacientes
 
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('apellido', 'nombre')
+        query = self.request.GET.get('q')
+
+        if query:
+            # Filtra si el texto coincide, apellido, nombre o dni
+            queryset = queryset.filter(
+                Q(nombre__icontains=query) |
+                Q(apellido__icontains=query) |
+                Q(dni__icontains=query)
+            )
+
+        return queryset
+   
 class MedicoDetailView(UserPassesTestMixin, DetailView):
     """Vista para ver el detalle de un médico, sus obras sociales y ausencias"""
     model = Medico

@@ -34,14 +34,14 @@ class AusenciaForm(forms.ModelForm):
         model = Ausencia
         fields = ["medico", "motivo", "fecha_inicio", "fecha_fin"]
         widgets = {
-            "medico": forms.Select(attrs={"class": "form-selec"}),
+            "medico": forms.Select(attrs={"class": "form-select"}),
             "motivo": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: Vacaciones, Licencia por enfermedad"}),
             "fecha_inicio": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "fecha_fin": forms.DateInput(attrs={"class": "forms-control", "type": "date"})
+            "fecha_fin": forms.DateInput(attrs={"class": "form-control", "type": "date"})
         }
         labels = {
             "medico": "Médico",
-            "motivo": "Mótivo de la ausencia",
+            "motivo": "Motivo de la ausencia",
             "fecha_inicio": "Fecha de inicio",
             "fecha_fin": "Fecha de fin (incluida)"
         }

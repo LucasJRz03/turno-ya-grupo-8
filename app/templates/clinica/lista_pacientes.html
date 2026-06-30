@@ -6,9 +6,18 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Pacientes Registrados</h2>
-        </div>
 
-    <div class="table-responsive">
+        <form method="get" class="d-flex" style="max-width: 400px; width: 100%;">
+            <input type="text" name="q" class="form-control me-2" placeholder="Buscar DNI, nombre..." value="{{ request.GET.q|default:'' }}">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            {% if request.GET.q %}
+                <a href="{% url 'app:lista_pacientes' %}" class="btn btn-outline-secondary ms-2">Limpiar</a>
+            {% endif %}
+        </form>
+
+    </div>
+
+    <div class="table-responsive shadow-sm rounded">
         <table class="table table-hover table-bordered align-middle">
             <thead class="table-success">
                 <tr>
@@ -16,28 +25,61 @@
                     <th>DNI</th>
                     <th>Email</th>
                     <th>Teléfono</th>
+                    <th class="text-center fw-semibold" >Acciones</th> 
                 </tr>
             </thead>
             <tbody>
                 {% for paciente in pacientes %}
-                
+              
                 <tr>
                     <td class="fw-semibold">{{ paciente.nombre_completo }}</td>
                     <td>{{ paciente.dni }}</td>
                     <td>{{ paciente.email }}</td>
                     <td>{{ paciente.telefono|default:"-" }}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary mb-1" disabled><i class="bi bi-person-lines-fill"></i> Detalle</button>
+                    </td>
                 </tr>
 
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
-                        No hay pacientes registrados en el sistema.
+                    <td colspan="5" class="text-center text-muted py-5">
+                        {% if request.GET.q %}
+                            <i class="bi bi-search fs-3 d-block mb-2"></i>
+                            No se encontraron pacientes que coincidan con "<strong>{{ request.GET.q }}</strong>".
+                        {% else %}
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            No hay pacientes registrados en el sistema.
+                        {% endif %}
                     </td>
                 </tr>
                 
                 {% endfor %}
+
             </tbody>
         </table>
     </div>
+    
+{% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Anterior</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Siguiente</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}

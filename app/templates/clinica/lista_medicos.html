@@ -34,7 +34,7 @@
         <th>Apellido y nombre</th>
         <th>Matrícula</th>
         <th>Especialidad</th>
-        {% if user.is_staff %}
+        {% if user.is_authenticated %}
         <th>Acciones</th>
         {% endif %}
       </tr>
@@ -46,21 +46,27 @@
         <td><code>{{ medico.matricula }}</code></td>
         <td>{{ medico.especialidad }}</td>
 
-        {% if user.is_staff %}
-        <td>
-          <a href="{% url 'app:detalle_medico' medico.pk %}" class="btn btn-sm btn-outline primary">
-            Ver detalle
-          </a>
-        </td>
+        {% if user.is_authenticated %}
+           <td class="text-center">
+               {% if user.is_staff %}
+                 <a href="{% url 'app:detalle_medico' medico.pk %}" class="btn btn-sm btn-outline-primary mb-1">
+                     <i class="bi bi-eye"></i> Ver detalle
+                 </a>
+               {% endif %}
+   
+               {% if not user.is_staff %}
+                 <a href="{% url 'app:nuevo_turno' %}?medico={{ medico.pk }}" class="btn btn-sm btn-primary mb-1">
+                     <i class="bi bi-calendar-plus"></i> Sacar Turno
+                 </a>
+               {% endif %}
+           </td>
         {% endif %}
       </tr>
       {% empty %}
       <tr>
-       {% if user.is_staff %}
-        <td colspan="4" class="text-center text-muted">No hay médicos cargados.</td>
-       {% else %}
-        <td colspan="3" class="text-center text-muted">No hay médicos cargados.</td>
-       {% endif %}
+        <td colspan="{% if user.is_authenticated %}4{% else %}3{% endif %}" class="text-center text-muted">
+            No hay médicos cargados.
+        </td>
       </tr>
       {% endfor %}
     </tbody>
