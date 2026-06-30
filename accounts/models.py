@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-
 class CustomUser(AbstractUser):
     """Modelo de usuario personalizado
     Solo contiene datos de autenticacion y rol"""
@@ -51,42 +50,42 @@ class CustomUser(AbstractUser):
     
     #Patron validate/new/update
 
-    def validate(self):
-        """Valida los datos del usuario."""
-
+    @classmethod
+    def validate(cls, username, email, tipo_usuario, exclude_pk=None):
+        """Valida los datos del usuario. Retorna una lista de errores."""
         errors = []
-
-        # Validar username
-        if not self.username or not self.username.strip():
+        
+        # 1. Validar username
+        username_limpio = str(username).strip() if username else ""
+        if not username_limpio:
             errors.append("El nombre de usuario es obligatorio.")
-        elif len(self.username) < 4:
+        elif len(username_limpio) < 4:
             errors.append("El nombre de usuario debe tener al menos 4 caracteres.")
         else:
-            # Verificar unicidad del username
-            qs_user = CustomUser.objects.filter(username=self.username)
-            if self.pk:
-                qs_user = qs_user.exclude(pk=self.pk)
+            qs_user = cls.objects.filter(username=username_limpio)
+            if exclude_pk:
+                qs_user = qs_user.exclude(pk=exclude_pk)
             if qs_user.exists():
                 errors.append("Ya existe un usuario con ese nombre de usuario.")
 
-        # Validar email
-        if not self.email or not self.email.strip():
+        # 2. Validar email
+        email_limpio = str(email).strip() if email else ""
+        if not email_limpio:
             errors.append("El email es obligatorio.")
         else:
             try:
-                validate_email(self.email)
+                validate_email(email_limpio)
             except ValidationError:
                 errors.append("El formato del email no es válido.")
             else:
-                # Verificar unicidad del email
-                qs_email = CustomUser.objects.filter(email=self.email)
-                if self.pk:
-                    qs_email = qs_email.exclude(pk=self.pk)
+                qs_email = cls.objects.filter(email=email_limpio)
+                if exclude_pk:
+                    qs_email = qs_email.exclude(pk=exclude_pk)
                 if qs_email.exists():
                     errors.append("Ya existe un usuario con ese email.")
 
-        # Validar tipo_usuario
-        if self.tipo_usuario not in dict(self.TIPOS_USUARIO):
+        # 3. Validar tipo_usuario
+        if tipo_usuario not in dict(cls.TIPOS_USUARIO):
             errors.append("El tipo de usuario no es válido.")
 
         return errors
@@ -94,6 +93,11 @@ class CustomUser(AbstractUser):
     @classmethod
     def new(cls, username, email, password, tipo_usuario='paciente', first_name='', last_name=''):
         """Crea un nuevo usuario si los datos son válidos."""
+
+        errors = cls.validate(username, email, tipo_usuario)
+        if errors:
+            return None, errors
+        
         user = cls(
             username=username,
             email=email,
@@ -101,29 +105,34 @@ class CustomUser(AbstractUser):
             first_name=first_name,
             last_name=last_name,
         )
-        errors = user.validate()
-        if errors:
-            return None, errors
+
         #Hasheo de contraseña
         user.set_password(password)
         user.save()
         return user, []
     
-    def update(self, email=None, first_name=None, last_name=None, tipo_usuario=None):
-        """Actualiza los datos del usuario. """
-        if email is not None:
-            self.email = email
-        if first_name is not None:
-            self.first_name = first_name
-        if last_name is not None:
-            self.last_name = last_name
-        if tipo_usuario is not None:
-            self.tipo_usuario = tipo_usuario
+    def update(self, **kwargs):
+        """Actualiza los datos del usuario si son válidos."""
 
-        errors = self.validate()
+        datos_futuros = {
+            "username": self.username,
+            "email": self.email, 
+            "first_name": self.first_name, 
+            "last_name": self.last_name, 
+            "tipo_usuario": self.tipo_usuario
+        }
+        datos_futuros.update(kwargs)
+        
+        errors = self.__class__.validate(
+            username=datos_futuros["username"],
+            email=datos_futuros["email"],
+            tipo_usuario=datos_futuros["tipo_usuario"],
+            exclude_pk=self.pk
+        )
         if errors:
             return errors
-        
+            
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
         self.save()
         return []
-            

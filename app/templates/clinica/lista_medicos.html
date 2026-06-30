@@ -1,35 +1,68 @@
 {% extends "base.html" %}
-
 {% block title %}Médicos — TurnoYa{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h2 class="h4">Médicos</h2>
-</div>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Nuestros Médicos</h2>
+    </div>
 
-<div class="table-responsive">
-  <table class="table table-hover align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>Apellido y nombre</th>
-        <th>Matrícula</th>
-        <th>Especialidad</th>
-        <!-- TODO: agregar columna de acciones cuando implementen detalle_medico -->
-      </tr>
-    </thead>
-    <tbody>
-      {% for medico in medicos %}
-      <tr>
-        <td>{{ medico }}</td>
-        <td><code>{{ medico.matricula }}</code></td>
-        <td>{{ medico.especialidad }}</td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="3" class="text-center text-muted">No hay médicos cargados.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- FILTRO DE ESPECIALIDAD -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label for="especialidad" class="form-label fw-bold">Filtrar por Especialidad</label>
+                    <select name="especialidad" id="especialidad" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas las especialidades</option>
+                        {% for esp in especialidades %}
+                            <option value="{{ esp.pk }}" {% if request.GET.especialidad == esp.pk|slugify %}selected{% endif %}>
+                                {{ esp.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLA DE MÉDICOS -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Apellido y Nombre</th>
+                        <th>Matrícula</th>
+                        <th>Especialidad</th>
+                        {% if user.is_staff %}<th class="text-end">Acciones</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medico in medicos %}
+                    <tr>
+                        <td class="fw-bold">{{ medico.nombre_completo }}</td>
+                        <td><span class="badge bg-secondary">{{ medico.matricula }}</span></td>
+                        <td>{{ medico.especialidad.nombre }}</td>
+                        {% if user.is_staff %}
+                        <td class="text-end">
+                            <a href="{% url 'app:detalle_medico' medico.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver Detalle
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">No hay médicos cargados en el sistema.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}
