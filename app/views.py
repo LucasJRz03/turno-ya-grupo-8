@@ -183,6 +183,17 @@ class AusenciaCreateView(LoginRequiredMixin, CreateView):
     form_class = AusenciaForm
     success_url = reverse_lazy('app:lista_medicos')
 
+    # inicia con los datos del médico seleccionado.
+    def get_initial(self):
+        initial = super().get_initial()
+
+        medico_id = self.request.GET.get('medico')
+
+        if medico_id:
+            initial['medico'] = medico_id
+
+        return initial
+
     def form_valid(self, form):
         medico = form.cleaned_data['medico']
         motivo = form.cleaned_data['motivo']
