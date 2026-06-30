@@ -207,6 +207,7 @@ class TurnoCancelView(LoginRequiredMixin, UpdateView):
         
         return HttpResponseRedirect(reverse("app:lista_turnos"))
 class TurnoConfirmarView(LoginRequiredMixin, UpdateView):
+
     """Vista para que un médico confirme un turno pendiente."""
     model = Turno
     fields = []
@@ -226,7 +227,55 @@ class TurnoConfirmarView(LoginRequiredMixin, UpdateView):
         else:
             messages.error(self.request, "No tienes permiso para confirmar este turno.")
         
-        return HttpResponseRedirect(reverse("app:lista_turnos"))
+        return HttpResponseRedirect(reverse("app:lista_turnos"))  
+class TurnoUpdateView(LoginRequiredMixin, UpdateView):
+    """Vista para que un paciente (o admin) edite un turno pendiente."""
+    model = Turno
+    form_class = TurnoForm
+    template_name = "clinica/nuevo_turno.html"  # Reutilizamos el mismo template
+    success_url = reverse_lazy("app:lista_turnos")
+
+    def get_queryset(self):
+        """
+        Restringe los turnos que se pueden editar.
+        - Un admin puede editar cualquier turno.
+        - Un paciente solo puede editar sus propios turnos y solo si están PENDIENTES.
+        """
+        qs = super().get_queryset()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(paciente__usuario=self.request.user, estado='PENDIENTE')
+
+    def form_valid(self, form):
+        """Sobrescribimos form_valid para usar el patrón turno.update() en lugar de form.save()"""
+        turno = self.get_object()
+        
+        # Doble chequeo de seguridad
+        if turno.estado != 'PENDIENTE':
+            messages.error(self.request, "Solo se pueden editar turnos que estén pendientes.")
+            return HttpResponseRedirect(self.get_success_url())
+
+        # Extraer datos limpios del formulario
+        medico = form.cleaned_data.get('medico')
+        fecha_hora = form.cleaned_data.get('fecha_hora')
+        motivo = form.cleaned_data.get('motivo', '')
+
+        # Llamar al método update del modelo (esto valida superposiciones, fechas pasadas, etc.)
+        errores = turno.update(
+            medico=medico,
+            fecha_hora=fecha_hora,
+            motivo=motivo
+        )
+
+        # Si el modelo devuelve errores, los inyectamos en el formulario
+        if errores:
+            for error in errores:
+                form.add_error(None, error)
+            return self.form_invalid(form)
+
+        # Éxito
+        messages.success(self.request, "Turno actualizado correctamente.")
+        return HttpResponseRedirect(self.get_success_url())
 class AusenciaCreateView(LoginRequiredMixin, CreateView):
     """Vista para que el personal cargue una nueva ausencia de un médico."""
     model = Ausencia

@@ -16,6 +16,7 @@ urlpatterns = [
     # Turnos
     path("turnos/", views.TurnoListView.as_view(), name="lista_turnos"),
     path("turnos/nuevo/", views.TurnoCreateView.as_view(), name="nuevo_turno"),
+    path("turnos/<int:pk>/editar/", views.TurnoUpdateView.as_view(), name="editar_turno"),
     path("turnos/<int:pk>/cancelar/", views.TurnoCancelView.as_view(), name="cancelar_turno"),  
     path("turnos/<int:pk>/confirmar/", views.TurnoConfirmarView.as_view(), name="confirmar_turno"),
     #Ausencias

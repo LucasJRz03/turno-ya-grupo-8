@@ -48,17 +48,27 @@
                         </td>
                         <td class="text-end">
                             {% if turno.estado == 'PENDIENTE' %}
+                                <!-- BOTÓN EDITAR (Solo para el paciente dueño o admin) -->
+                                {% if user.is_staff or user == turno.paciente.usuario %}
+                                    <a href="{% url 'app:editar_turno' turno.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Editar turno">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </a>
+                                {% endif %}
+
+                                <!-- BOTÓN ACEPTAR (Solo para el médico o admin) -->
                                 {% if user.is_staff or user.medico == turno.medico %}
-                                    <a href="{% url 'app:confirmar_turno' turno.pk %}" class="btn btn-sm btn-outline-success me-1">
+                                    <a href="{% url 'app:confirmar_turno' turno.pk %}" class="btn btn-sm btn-outline-success me-1" title="Aceptar turno">
                                         <i class="bi bi-check-circle"></i> Aceptar
                                     </a>
                                 {% endif %}
                                 
+                                <!-- BOTÓN CANCELAR (Para el paciente, el médico o admin) -->
                                 {% if user.is_staff or user == turno.paciente.usuario or user == turno.medico.usuario %}
-                                    <a href="{% url 'app:cancelar_turno' turno.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <a href="{% url 'app:cancelar_turno' turno.pk %}" class="btn btn-sm btn-outline-danger" title="Cancelar turno">
                                         <i class="bi bi-x-circle"></i> Cancelar
                                     </a>
                                 {% endif %}
+
                             {% else %}
                                 <span class="text-muted small">Sin acciones</span>
                             {% endif %}

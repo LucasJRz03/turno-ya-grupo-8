@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Detalle - {{ medico.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <!-- Encabezado del Perfil -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-person-badge"></i> Perfil Profesional</h4>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="fw-bold">{{ medico.nombre_completo }}</h3>
+                    <p class="text-muted mb-1"><i class="bi bi-heart-pulse"></i> {{ medico.especialidad.nombre }}</p>
+                    <p class="mb-0"><span class="badge bg-secondary">Matrícula: {{ medico.matricula }}</span></p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <h2 class="fw-bold text-primary mb-0">{{ medico.cantidad_turnos }}</h2>
+                    <small class="text-muted">Turnos históricos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Obras Sociales -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 mb-4 h-100">
+                <div class="card-header bg-light fw-bold">
+                    <i class="bi bi-shield-check"></i> Obras Sociales que atiende
+                </div>
+                <div class="card-body">
+                    {% if obras_sociales %}
+                        <ul class="list-group list-group-flush">
+                            {% for obra in obras_sociales %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    {{ obra.nombre }}
+                                    {% if obra.requiere_token %}
+                                        <span class="badge bg-warning text-dark" title="Requiere token/autorización">
+                                            <i class="bi bi-key-fill"></i> Token
+                                        </span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">Este profesional atiende de forma particular únicamente.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ausencias -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 mb-4 h-100">
+                <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-calendar-x"></i> Ausencias Programadas</span>
+                    {% if user.is_staff %}
+                        <a href="{% url 'app:crear_ausencia' %}" class="btn btn-sm btn-outline-primary">
+                            + Cargar
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if ausencias %}
+                        <ul class="list-group list-group-flush">
+                            {% for ausencia in ausencias %}
+                                <li class="list-group-item px-0">
+                                    <strong>{{ ausencia.motivo }}</strong><br>
+                                    <small class="text-muted">
+                                        Desde el {{ ausencia.fecha_inicio|date:"d/m/Y" }} al {{ ausencia.fecha_fin|date:"d/m/Y" }}
+                                    </small>
+                                    <span class="badge bg-danger float-end">Ausente</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">El profesional no registra ausencias programadas a futuro.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

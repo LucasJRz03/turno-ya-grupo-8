@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Confirmar Turno — TurnoYa{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-success shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle-fill"></i> Aceptar Turno</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">
+                        ¿Estás seguro de que deseas <strong>confirmar</strong> el turno con el paciente 
+                        <strong>{{ turno.paciente.nombre_completo }}</strong> 
+                        para el <strong>{{ turno.fecha_hora|date:"d/m/Y H:i" }} hs</strong>?
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'app:lista_turnos' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver al listado
+                            </a>
+                            <button type="submit" class="btn btn-success fw-bold">
+                                <i class="bi bi-check2-circle"></i> Sí, aceptar turno
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
