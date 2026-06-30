@@ -369,9 +369,13 @@ class AusenciaModelTest(TestCase):
         """La fecha de inicio no puede ser posterior a la de fin."""
         fecha_inicio = timezone.now().date()
         fecha_fin = fecha_inicio - timedelta(days=2)
-        
-        ausencia = Ausencia(medico=self.medico, motivo="Vacaciones", fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
-        errores = ausencia.validate()
+    
+        errores = Ausencia.validate(
+            medico=self.medico, 
+            motivo="Vacaciones", 
+            fecha_inicio=fecha_inicio, 
+            fecha_fin=fecha_fin
+        )
         self.assertIn("La fecha fin no puede ser mayor a la fecha de inicio.", errores)
 
     def test_new_crea_ausencia_correcta(self):
@@ -386,8 +390,7 @@ class ObraSocialModelTest(TestCase):
     """Pruebas unitarias para el modelo ObraSocial."""
 
     def test_validate_nombre_vacio(self):
-        os = ObraSocial(nombre="")
-        errores = os.validate()
+        errores = ObraSocial.validate(nombre="")
         self.assertIn("El nombre de la obra social no puede estar vacío.", errores)
 
     def test_new_crea_obra_social(self):

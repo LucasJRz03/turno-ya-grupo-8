@@ -287,6 +287,8 @@ class Turno(models.Model):
 
 
 class Ausencia(models.Model): 
+    """Representan las ausencias de los médicos."""
+
     medico = models.ForeignKey('Medico', on_delete=models.CASCADE, related_name='ausencias')
     motivo = models.CharField(max_length=100)
     fecha_inicio = models.DateField()
@@ -295,14 +297,15 @@ class Ausencia(models.Model):
     def __str__(self):
         return f"Ausencia de Dr/a {self.medico}, fecha:{self.fecha_inicio.strftime('%Y-%m-%d')}"
 
-    def validate(self):
+    @classmethod
+    def validate(cls, medico, motivo, fecha_inicio, fecha_fin):
         """solo valida, nunca toca la BD, retorna un list[str]"""
         errors = []
-        if not self.motivo:
+        if not motivo:
             errors.append("El motivo no puede estar vacío.")
 
-        if self.fecha_inicio and self.fecha_fin:
-            if self.fecha_inicio > self.fecha_fin:
+        if fecha_inicio and fecha_fin:
+            if fecha_inicio > fecha_fin:
                 errors.append("La fecha fin no puede ser mayor a la fecha de inicio.")
 
         return errors
@@ -310,60 +313,74 @@ class Ausencia(models.Model):
     @classmethod
     def new(cls, medico, motivo, fecha_inicio, fecha_fin):
         """LLama a validate, si hay errores retorna none, sino crea la ausencia"""
-        ausencia = cls(
-            medico = medico,
-            motivo = motivo,
-            fecha_inicio = fecha_inicio,
-            fecha_fin = fecha_fin
-        )
-        errors = ausencia.validate()
+
+        errors = cls.validate(medico, motivo, fecha_inicio, fecha_fin)
 
         if errors:
             return None, errors
         
-        ausencia.save()
+        ausencia = cls.objects.create(
+            medico=medico,
+            motivo=motivo,
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin
+        )
         return ausencia, []
 
     def update(self, **kwargs): 
-        for attr, value in kwargs.items():
-            setattr(self, attr, value)
-        
-        errors = self.validate()
-    
+        """Proyecta los datos, valida y si no hay errores, actualiza."""
+
+        datos_futuros = {
+            "medico": self.medico,
+            "motivo": self.motivo,
+            "fecha_inicio": self.fecha_inicio,
+            "fecha_fin": self.fecha_fin
+        }
+        datos_futuros.update(kwargs)
+
+        errors = self.__class__.validate(**datos_futuros)
         if errors:
             return errors
+
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
 
         self.save()
         return []
 
 class ObraSocial(models.Model):
+    """Representa las obras sociales con las que se trabajan."""
+
     nombre = models.CharField(max_length=100)
     sitio_web = models.URLField(blank=True, null=True)
     requiere_token = models.BooleanField(default=False)
     medicos_disponibles = models.ManyToManyField('Medico', related_name='obra_sociales', blank=True)
 
-    def validate(self):
+    def __str__(self):
+        return self.nombre
+
+    @classmethod
+    def validate(cls, nombre, sitio_web='', requiere_token=False):
         """Solo valida, nunca toca la BD, retorna list[str]."""
         errors = []
-        if not self.nombre:
+        if not nombre:
             errors.append("El nombre de la obra social no puede estar vacío.")
 
         return errors
 
     @classmethod
     def new(cls, nombre, sitio_web='', requiere_token=False, medicos=None):
-        """Llama a validate, si hay errores retorna None; si no, crea y retorna  (instancia, [])."""
-        obra_social = cls(
-            nombre = nombre,
-            sitio_web = sitio_web,
-            requiere_token = requiere_token
-        )
-        errors = obra_social.validate()
+        """Llama a validate, si hay errores retorna None; si no, crea y asocia."""
+        errors = cls.validate(nombre, sitio_web, requiere_token)
 
         if errors:
             return None, errors
 
-        obra_social.save()
+        obra_social = cls.objects.create(
+            nombre=nombre,
+            sitio_web=sitio_web,
+            requiere_token=requiere_token
+        )
 
         if medicos is not None:
             obra_social.medicos_disponibles.set(medicos)
@@ -371,24 +388,34 @@ class ObraSocial(models.Model):
         return obra_social, []
 
     def update(self, medicos=None, **kwargs):
-        """Llama a validate, si hay errores retorna la lista sin guardar, si no, llama self.save() y retorna []."""
+        """Proyecta los datos, valida y si no hay errores, actualiza."""
+        datos_futuros = {
+            "nombre": self.nombre,
+            "sitio_web": self.sitio_web,
+            "requiere_token": self.requiere_token
+        }
+        
         for key, value in kwargs.items():
-            setattr(self, key, value)
+            if key in datos_futuros:
+                datos_futuros[key] = value
 
-        errors = self.validate()
+        errors = self.__class__.validate(**datos_futuros)
 
         if errors:
             return errors
 
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
         self.save()
 
+        # El ManyToMany se gestiona aparte porque no se valida en los campos básicos
         if medicos is not None:
             self.medicos_disponibles.set(medicos)
 
         return []
         
-    def __str__(self):
-        return self.nombre
+    
 
 
 
