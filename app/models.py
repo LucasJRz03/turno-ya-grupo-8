@@ -71,7 +71,7 @@ class Medico(models.Model):
         return self.turno_set.count()
 
     @classmethod
-    def validate(cls, usuario, matricula, especialidad):
+    def validate(cls, usuario, matricula, especialidad, exclude_pk=None):
         """Valida los datos del médico. Retorna una lista de errores.
         Si la lista está vacía, los datos son válidos."""
 
@@ -82,6 +82,15 @@ class Medico(models.Model):
 
         if not matricula or not matricula.strip():
             errors.append("La matrícula es obligatoria.")
+        else:
+            matricula_limpia = str(matricula).strip()
+            qs = cls.objects.filter(matricula=matricula_limpia)
+        
+            if exclude_pk:
+                qs = qs.exclude(pk=exclude_pk)
+            
+            if qs.exists():
+                errors.append("Ya existe un médico con esa matrícula.")
 
         # `especialidad` puede ser una instancia de Especialidad o un nombre (string)
         if isinstance(especialidad, Especialidad):
@@ -89,11 +98,6 @@ class Medico(models.Model):
         else:
             if not especialidad or not str(especialidad).strip():
                 errors.append("La especialidad es obligatoria.")
-
-        if matricula:
-            qs = cls.objects.filter(matricula=str(matricula).strip())
-            if qs.exists():
-                errors.append("Ya existe un médico con esa matrícula.")
 
         return errors
 
@@ -126,7 +130,8 @@ class Medico(models.Model):
         datos_futuros = {
             "usuario": self.usuario, 
             "matricula": self.matricula, 
-            "especialidad": self.especialidad
+            "especialidad": self.especialidad,
+            "exclude_pk": self.pk
         }
         datos_futuros.update(kwargs)
         
@@ -289,7 +294,8 @@ class Turno(models.Model):
             "paciente": self.paciente,
             "fecha_hora": self.fecha_hora,
             "motivo": self.motivo,
-            "estado": self.estado
+            "estado": self.estado,
+            "exclude_pk": self.pk
         }
         datos_futuros.update(kwargs)
         
@@ -335,7 +341,7 @@ class Ausencia(models.Model):
         if not fecha_inicio: 
             errors.append("La fecha de inicio es obligatoria.")
         if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
-            errors.append("La fecha fin no puede ser anterior a la fecha de inicio.")  
+            errors.append("La fecha fin no puede ser mayor a la fecha de inicio.")  
         return errors
 
     @classmethod

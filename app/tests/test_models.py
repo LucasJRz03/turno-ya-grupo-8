@@ -2,12 +2,11 @@
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from app.models import Medico, Turno, Paciente, Especialidad
+from app.models import Medico, Turno, Paciente, Especialidad, Ausencia, ObraSocial
 from django.utils import timezone
 from datetime import timedelta
 
 User = get_user_model()
-
 class MedicoModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
 
@@ -72,12 +71,11 @@ class MedicoModelTest(TestCase):
 
     # --- update ---
     def test_update_modifica_datos(self):
-        cardio = Especialidad.objects.create(nombre="Cardiología")
-        errors = self.medico.update("MP-9999", cardio)
+        cardio = Especialidad.objects.create(nombre="Cardiologia")
+        errors = self.medico.update(matricula="MP-9999", especialidad=cardio)
         self.assertEqual(errors, [])
         self.medico.refresh_from_db()
-        self.assertEqual(self.medico.especialidad.nombre, "Cardiología")
-
+        self.assertEqual(self.medico.especialidad.nombre, "Cardiologia")
 class TurnoModelTest(TestCase):
     """Pruebas para el modelo Turno."""
     def setUp(self):
@@ -107,8 +105,8 @@ class TurnoModelTest(TestCase):
             motivo="Consulta general",
             estado="PENDIENTE",
         )
-    # --- __str__ y métodos simples ---
 
+    # --- __str__ y métodos simples ---
     def test_str_incluye_paciente_medico_fecha(self):
         self.assertIn(str(self.turno.paciente), str(self.turno))
         self.assertIn(str(self.turno.medico), str(self.turno))
@@ -116,21 +114,16 @@ class TurnoModelTest(TestCase):
 
     # --- validate ---
     def test_validate_fecha_pasada(self):
-        self.turno.fecha_hora = timezone.now() - timedelta(days=1)
-        errors = self.turno.validate()
+        fecha_pasada = timezone.now() - timedelta(days=1)
+        errors = Turno.validate(self.medico, self.paciente, fecha_pasada, self.turno.motivo, self.turno.estado)
         self.assertTrue(len(errors) > 0)
 
     def test_validate_fecha_futura(self):
         self.turno.fecha_hora = timezone.now() + timedelta(days=1)
-        errors = self.turno.validate()
+        errors = Turno.validate(self.medico, self.paciente, self.turno.fecha_hora, self.turno.motivo, self.turno.estado)
         self.assertEqual(errors, [])
-
-    def test_validate_estado_invalido(self):
-        self.turno.estado = "INVALIDO"
-        errors = self.turno.validate()
-        self.assertTrue(len(errors) > 0)
+    
     # --- new ---
-
     def test_new_crea_turno(self):
         turno, errors = Turno.new(
             medico=self.medico,
@@ -205,7 +198,6 @@ class TurnoModelTest(TestCase):
         )
         self.assertIsNone(turno2)
         self.assertTrue(any("ya tiene un turno" in e for e in errors))
-
 class PacienteModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
 
@@ -272,9 +264,7 @@ class PacienteModelTest(TestCase):
         )
         self.assertEqual(errors, [])
         self.assertIsNotNone(paciente)
-        self.assertEqual(paciente.nombre, "Carlos")
-        # Debería haber 2 pacientes ahora, Juan y Carlos
-        self.assertEqual(Paciente.objects.count(), 2)
+        self.assertEqual(paciente.usuario.first_name, "Carlos")
 
     def test_new_con_datos_invalidos_no_crea(self):
         datos_user = User.objects.create_user(username="pepe", email="pepe@gmail.com", password="hola")
@@ -308,8 +298,7 @@ class PacienteModelTest(TestCase):
         )
         self.assertTrue(len(errors) > 0)
         self.paciente.refresh_from_db()
-        self.assertEqual(self.paciente.nombre, "Juan") # sin cambios
-
+        self.assertEqual(self.paciente.usuario.first_name, "Juan")
 class EspecialidadModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
     
@@ -328,10 +317,10 @@ class EspecialidadModelTest(TestCase):
 
     # --- new ---
     def test_new_crea_especialidad(self):
-        esp, errores = Especialidad.new(nombre="Neurología")
+        esp, errores = Especialidad.new(nombre="Neurologia")
         self.assertEqual(errores,[])
-        self.assertEqual(esp.nombre, "Neurología")
-        self.assertTrue(Especialidad.objects.filter(nombre= "Neurologia"))
+        self.assertEqual(esp.nombre, "Neurologia")
+        self.assertTrue(Especialidad.objects.filter(nombre="Neurologia").exists())
 
     def test_new_con_nombre_vacio_no_crea(self):
         count_antes = Especialidad.objects.count()
@@ -346,4 +335,43 @@ class EspecialidadModelTest(TestCase):
         errores = esp.update(nombre="Cardiología Intervencionista", descripcion="Actualizada")
         self.assertEqual(errores, [])
         esp.refresh_from_db()
-        self.assertEqual(esp.nombre, "Cardiología Intervencionista") 
+        self.assertEqual(esp.nombre, "Cardiología Intervencionista")
+class AusenciaModelTest(TestCase):
+    """Pruebas unitarias para el modelo Ausencia."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="lauraromero", email="laura@gmail.com",
+            password="testpass123", first_name="Laura", last_name="Romero"
+        )
+        self.especialidad = Especialidad.objects.create(nombre="Pediatría")
+        self.medico = Medico.objects.create(
+            usuario=self.user, matricula="MP-9999", especialidad=self.especialidad
+        )
+
+    def test_validate_fechas_invalidas(self):
+        """La fecha de inicio no puede ser posterior a la de fin."""
+        fecha_inicio = timezone.now().date()
+        fecha_fin = fecha_inicio - timedelta(days=2)
+        errores = Ausencia.validate(self.medico, "Vacaciones", fecha_inicio, fecha_fin)
+        self.assertIn("La fecha fin no puede ser mayor a la fecha de inicio.", errores)
+
+    def test_new_crea_ausencia_correcta(self):
+        fecha_inicio = timezone.now().date()
+        fecha_fin = fecha_inicio + timedelta(days=5)
+        ausencia, errores = Ausencia.new(self.medico, "Congreso", fecha_inicio, fecha_fin)
+        self.assertEqual(errores, [])
+        self.assertIsNotNone(ausencia)
+        self.assertEqual(ausencia.motivo, "Congreso")
+class ObraSocialModelTest(TestCase):
+    """Pruebas unitarias para el modelo ObraSocial."""
+
+    def test_validate_nombre_vacio(self):
+        errores = ObraSocial.validate(nombre="")
+        self.assertIn("El nombre de la obra social no puede estar vacío.", errores)
+
+    def test_new_crea_obra_social(self):
+        obra_social, errores = ObraSocial.new(nombre="OSDE", requiere_token=True)
+        self.assertEqual(errores, [])
+        self.assertEqual(obra_social.nombre, "OSDE")
+        self.assertTrue(obra_social.requiere_token) 

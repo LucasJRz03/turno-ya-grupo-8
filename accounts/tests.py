@@ -47,8 +47,11 @@ class CustomUserModelTest(TestCase):
 
     def test_validate_username_corto(self):
         """Prueba que validate() detecta usernames cortos."""
-        user = CustomUser(username='ab', email='test@test.com')
-        errors = user.validate()
+        errors = CustomUser.validate(
+        username='ab', 
+        email='test@test.com', 
+        tipo_usuario='paciente'
+        )
         self.assertTrue(any('4 caracteres' in e for e in errors))
 
     def test_update_usuario_exitoso(self):
