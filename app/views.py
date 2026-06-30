@@ -3,7 +3,7 @@
 from django.views.generic import ListView, TemplateView, CreateView, DetailView, UpdateView
 from django.contrib import messages
 from django.utils import timezone
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from .forms import TurnoForm, AusenciaForm
 from .models import Medico, Turno, Paciente, Ausencia
@@ -103,6 +103,16 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
     form_class = TurnoForm
     template_name = "clinica/nuevo_turno.html"
     success_url = reverse_lazy("app:lista_turnos")
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        medico_id = self.request.GET.get('medico')
+
+        if medico_id:
+            initial['medico'] = medico_id
+
+        return initial
 
     def form_valid(self, form):
         """

@@ -6,7 +6,8 @@ from app.models import Medico, Turno, Paciente, Especialidad, Ausencia, ObraSoci
 from django.utils import timezone
 from datetime import timedelta
 
-User = get_user_model()
+User= get_user_model
+
 class MedicoModelTest(TestCase):
     """Verifica comportamiento básico y validaciones del modelo."""
 

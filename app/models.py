@@ -66,8 +66,6 @@ class Medico(models.Model):
 
     def cantidad_turnos(self):
         """Retorna la cantidad total de turnos asociados a este médico."""
-        if not hasattr(self, "turno_set"):
-            return 0
         return self.turno_set.count()
 
     @classmethod

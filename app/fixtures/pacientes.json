@@ -1,0 +1,14 @@
+[
+    {
+        "model": "app.paciente",
+        "pk": 1,
+        "fields": {
+            "usuario": 3,
+            "nombre": "juan",
+            "apellido": "Pérez",
+            "dni": "35135123",
+            "email": "paciente@gmail.com",
+            "telefono": "2901123456"
+        }
+    }
+]
