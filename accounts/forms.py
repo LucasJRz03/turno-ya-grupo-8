@@ -140,5 +140,4 @@ class SolicitudMedicoForm(forms.ModelForm):
             raise forms.ValidationError("Ya existe una solicitud pendiente con esa matrícula.")
         
         return matricula
-
-        
+   

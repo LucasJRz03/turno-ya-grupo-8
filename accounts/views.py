@@ -5,16 +5,19 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
-from .forms import CustomUserCreationForm, PerfilForm, SolicitudMedicoForm
+from .forms import CustomUserCreationForm, PerfilForm, SolicitudMedicoForm, LoginForm
 from .models import CustomUser
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from app.models import Paciente, SolicitudMedico
+from app.forms import PacienteForm
 class LoginView(DjangoLoginView):
     """Vista para manejar el inicio de sesión de los usuarios."""
 
     template_name = "accounts/login.html"
     redirect_authenticated_user = True
     success_url = reverse_lazy("app:home")
+    form_class=LoginForm
 
     def form_valid(self, form):
         """Muestra un mensaje de bienvenida si el formulario es valido."""
@@ -65,7 +68,19 @@ class PerfilView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
         
+        if user.es_paciente:
+            try:
+                paciente_instance = user.paciente
+            except Paciente.DoesNotExist:
+                paciente_instance = None
+            
+            # Usamos prefix='paciente' para que los inputs HTML se llamen paciente-dni, paciente-telefono
+            if 'paciente_form' not in kwargs:
+                context['paciente_form'] = PacienteForm(instance=paciente_instance, prefix='paciente')
+
+
         # Verificar si el usuario ya es médico
         if self.request.user.es_medico:
             context['es_medico'] = True
@@ -93,9 +108,36 @@ class PerfilView(LoginRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         
-        # Detectar si viene del formulario de perfil o de solicitud médica
-        if 'matricula' in request.POST:
+        # Detecta qué formulario se envió basándose en el atributo 'name' del botón
+        if 'send_solicitud' in request.POST:
             return self.handle_solicitud(request)
+            
+        elif 'update_profile' in request.POST:
+            # Manejar el guardado conjunto de Usuario + Paciente
+            form = self.get_form()
+            paciente_form = None
+            
+            if request.user.es_paciente:
+                try:
+                    paciente_instance = request.user.paciente
+                except Paciente.DoesNotExist:
+                    paciente_instance = None
+                paciente_form = PacienteForm(request.POST, instance=paciente_instance, prefix='paciente')
+            
+            # Valida ambos formularios
+            if form.is_valid() and (paciente_form is None or paciente_form.is_valid()):
+                form.save() # Guarda email, nombre, apellido
+                
+                if paciente_form and paciente_form.has_changed():
+                    paciente = paciente_form.save(commit=False)
+                    paciente.usuario = request.user # Asegurar la relación
+                    paciente.save()
+                    
+                messages.success(request, "Perfil actualizado correctamente.")
+                return HttpResponseRedirect(self.get_success_url())
+            else:
+                # Si hay errores, volver a renderizar la página con los errores
+                return self.render_to_response(self.get_context_data(form=form, paciente_form=paciente_form))
         else:
             return super().post(request, *args, **kwargs)
 

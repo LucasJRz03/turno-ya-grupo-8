@@ -1,5 +1,5 @@
 from django import forms
-from .models import Turno, Ausencia, timezone
+from .models import Turno, Ausencia, Paciente, timezone
 
 class TurnoForm(forms.ModelForm):
     """Formulario para crear un turno nuevo."""
@@ -45,5 +45,23 @@ class AusenciaForm(forms.ModelForm):
             "fecha_inicio": "Fecha de inicio",
             "fecha_fin": "Fecha de fin (incluida)"
         }
-
+class PacienteForm(forms.ModelForm):
+    """Formulario para editar los datos específicos del perfil de paciente."""
+    class Meta:
+        model = Paciente
+        fields = ['dni', 'telefono']
+        widgets = {
+            'dni': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ej: 12345678'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ej: 2901-55-11-11'
+            }),
+        }
+        labels = {
+            'dni': 'DNI',
+            'telefono': 'Teléfono de contacto'
+        }
     
