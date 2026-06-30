@@ -1,6 +1,7 @@
 """Configuración global del proyecto Django TurnoYa."""
 
 from pathlib import Path
+from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,13 +10,13 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "unfold",
     "accounts",
     "app",
     
@@ -81,7 +82,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Autenticación
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/app/templates/clinica/home/"
+LOGIN_REDIRECT_URL = reverse_lazy('app:home')
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 UNFOLD = {

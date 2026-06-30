@@ -1,5 +1,5 @@
 from django import forms
-from .models import Turno, timezone
+from .models import Turno, Ausencia, timezone
 
 class TurnoForm(forms.ModelForm):
     """Formulario para crear un turno nuevo."""
@@ -27,5 +27,23 @@ class TurnoForm(forms.ModelForm):
         if fecha_hora and fecha_hora < timezone.now():
             self.add_error("fecha_hora", "La fecha y hora del turno no puede ser en el pasado.")
         return cleaned_data
+    
+class AusenciaForm(forms.ModelForm):
+    """Formulario para registrar la ausencia de un médico."""
+    class Meta:
+        model = Ausencia
+        fields = ["medico", "motivo", "fecha_inicio", "fecha_fin"]
+        widgets = {
+            "medico": forms.Select(attrs={"class": "form-selec"}),
+            "motivo": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: Vacaciones, Licencia por enfermedad"}),
+            "fecha_inicio": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "fecha_fin": forms.DateInput(attrs={"class": "forms-control", "type": "date"})
+        }
+        labels = {
+            "medico": "Médico",
+            "motivo": "Mótivo de la ausencia",
+            "fecha_inicio": "Fecha de inicio",
+            "fecha_fin": "Fecha de fin (incluida)"
+        }
 
     
