@@ -1,47 +1,86 @@
 {% extends "base.html" %}
-
 {% block title %}Inicio — TurnoYa{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-  <div class="col">
-    <h1 class="h3">Panel de inicio</h1>
+<div class="container mt-4 mb-5">
+    <h2 class="mb-4">Panel de Inicio</h2>
     <p class="text-muted">Bienvenido al sistema de gestión de turnos médicos.</p>
-  </div>
-</div>
 
-<div class="row g-3">
+    {% if user.is_staff %}
+        <!-- ESTADÍSTICAS PARA ADMIN -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-heart-pulse"></i> Médicos</h5>
+                        <h2 class="mb-0">{{ total_medicos }}</h2>
+                        <small>Profesionales activos</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-people"></i> Pacientes</h5>
+                        <h2 class="mb-0">{{ total_pacientes }}</h2>
+                        <small>Registrados en el sistema</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-calendar-check"></i> Turnos</h5>
+                        <h2 class="mb-0">{{ total_turnos }}</h2>
+                        <small>{{ turnos_pendientes }} pendientes</small>
+                    </div>
+                </div>
+            </div>
+        </div>
 
- <div class="col-12 col-md-4">
-    <div class="card shadow-sm border-success h-100">
-      <div class="card-body text-center py-4">
-        <h3 class="card-title text-success fw-semibold mb-3">Staff Médico</h3>
-        <h2 class="display-4 fw-bold text-dark">{{ total_medicos }}</h2>
-        <p class="card-text text-muted mt-2">Profesionales activos</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-md-4">
-    <div class="card shadow-sm border-primary h-100">
-      <div class="card-body text-center py-4">
-        <h3 class="card-title text-primary fw-semibold mb-3">Pacientes</h3>
-        <h2 class="display-4 fw-bold text-dark">{{ total_pacientes }}</h2>
-        <p class="card-text text-muted mt-2">Registrados en el sistema</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-md-4">
-    <div class="card shadow-sm border-warning h-100">
-      <div class="card-body text-center py-4">
-        <h3 class="card-title text-warning fw-semibold mb-3">Turnos Globales</h3>
-          <h2 class="display-4 fw-bold text-dark">{{ total_turnos }}</h2>
-          <p class="card-text text-muted mt-2">
-            <span class="badge bg-warning text-dark">{{ turnos_pendientes }}</span> pendientes
-          </p>
-      </div>
-    </div>
-  </div>
+    {% elif mis_turnos %}
+        <!-- PRÓXIMOS TURNOS PARA MÉDICOS/PACIENTES -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light fw-bold">
+                <i class="bi bi-calendar3"></i> Mis próximos turnos
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Médico / Paciente</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for turno in mis_turnos %}
+                        <tr>
+                            <td>{{ turno.fecha_hora|date:"d/m/Y H:i" }} hs</td>
+                            <td>
+                                {% if user.es_medico %}
+                                    {{ turno.paciente.nombre_completo }}
+                                {% else %}
+                                    {{ turno.medico.nombre_completo }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if turno.estado == 'PENDIENTE' %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% elif turno.estado == 'CONFIRMADO' %}
+                                    <span class="badge bg-success">Confirmado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info shadow-sm">
+            <i class="bi bi-info-circle"></i> No tienes turnos registrados actualmente.
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

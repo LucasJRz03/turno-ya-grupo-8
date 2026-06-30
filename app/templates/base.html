@@ -8,55 +8,60 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+  <!-- Navbar en base.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="{% url 'app:home' %}">TurnoYa</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-            <div class="collapse navbar-collapse" id="navMenu">
-        <ul class="navbar-nav ms-auto">
-          {% if user.is_authenticated %}
-            <!-- Enlaces de navegación para usuarios autenticados -->
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'app:lista_medicos' %}">Médicos</a>
-            </li>  
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'app:lista_pacientes' %}">Pacientes</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'app:lista_turnos' %}">Turnos</a>
-            </li>
-            <!-- Menú de usuario -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-person-circle me-1"></i> {{ user.nombre_completo|default:user.username }}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><h6 class="dropdown-header">Cuenta</h6></li>
-                <li><span class="dropdown-item-text text-muted small">Tipo: {{ user.get_tipo_usuario_display }}</span></li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                  <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="dropdown-item text-danger">Cerrar Sesión</button>
-                  </form>
-                </li>
-              </ul>
-            </li>
-          {% else %}
-            <!-- Botones para usuarios no autenticados -->
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:register' %}">Registrarse</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts:login' %}">Iniciar Sesión</a>
-            </li>
-          {% endif %}
-        </ul>
-      </div>
+        <a class="navbar-brand fw-bold" href="{% url 'app:home' %}">
+            <i class="bi bi-heart-pulse-fill"></i> TurnoYa
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'app:lista_medicos' %}">Médicos</a>
+                    </li>
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'app:lista_pacientes' %}">Pacientes</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'app:lista_turnos' %}">Turnos</a>
+                    </li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.nombre_completo|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:perfil' %}">Mi Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">Cerrar Sesión</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:register' %}">Registrarse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-light btn-sm ms-2 mt-1" href="{% url 'accounts:login' %}">Iniciar Sesión</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-  </nav>
+</nav>
 
   <main class="container my-4">
     {% block content %}{% endblock %}
