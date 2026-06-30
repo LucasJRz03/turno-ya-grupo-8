@@ -3,7 +3,8 @@
 from django.views.generic import ListView, TemplateView, CreateView, DetailView, UpdateView
 from django.contrib import messages
 from django.utils import timezone
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
 from .forms import TurnoForm, AusenciaForm
 from .models import Medico, Turno, Paciente, Ausencia
 from django.urls import reverse_lazy, reverse
@@ -150,6 +151,14 @@ class PacienteListView(LoginRequiredMixin, ListView):
     template_name = "clinica/lista_pacientes.html"
     context_object_name = "pacientes"
     ordering = ['usuario__last_name', 'usuario__first_name'] # Ordenar por apellido y nombre 
+
+    def test_func(self):
+        # Esta es la prueba de seguridad: ¿El usuario es Staff/Admin?
+        return self.request.user.is_staff
+
+    def handle_no_permission(self):
+        # Si no es staff, en lugar de mandarlo al login, le mostramos un error 403 (Prohibido)
+        raise PermissionDenied("No tienes permisos para acceder a esta sección.")
 
     def get_queryset(self):
         # select_related para evitar N+1 queries al acceder al usuario
