@@ -25,6 +25,8 @@
                     </tr>
                 </thead>
                 <tbody>
+
+                 
                     {% for turno in turnos %}
                     <tr>
                         <td>{{ turno.fecha_hora|date:"d/m/Y - H:i" }} hs</td>
@@ -79,6 +81,7 @@
                         <td colspan="5" class="text-center text-muted py-4">No tenés turnos programados en el sistema.</td>
                     </tr>
                     {% endfor %}
+               
                 </tbody>
             </table>
         </div>

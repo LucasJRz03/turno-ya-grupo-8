@@ -23,7 +23,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'app:lista_medicos' %}">Médicos</a>
                     </li>
-                    {% if user.is_staff %}
+                    {% if user.is_staff or user.es_medico %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'app:lista_pacientes' %}">Pacientes</a>
                     </li>

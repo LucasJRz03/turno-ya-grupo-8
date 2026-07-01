@@ -155,7 +155,7 @@ class PacienteListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def test_func(self):
         # Esta es la prueba de seguridad: ¿El usuario es Staff/Admin?
-        return self.request.user.is_staff
+        return self.request.user.is_staff or self.request.user.es_medico
 
     def handle_no_permission(self):
         # Si no es staff, en lugar de mandarlo al login, le mostramos un error 403 (Prohibido)

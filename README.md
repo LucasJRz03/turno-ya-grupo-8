@@ -149,6 +149,9 @@ turnoya/
 ### Inicio
 ![Pantalla de inicio](docs/screenshots/inicio.png)
 
+### Inicio (vista medico/paciente)
+![Pantalla de inicio](docs/screenshots/inicio-vista.png)
+
 ### Lista de turnos
 ![Lista de turnos](docs/screenshots/turnos.png)
 
@@ -158,11 +161,12 @@ turnoya/
 ### Login
 ![Login](docs/screenshots/login.png)
 
+### Registro
+![Registrarse](docs/screenshots/registro.png)
+
 ---
 
 ## 🧩 Decisiones de diseño
-
-> *(Mínimo 200 palabras — completar antes de la entrega final)*
 
 Describir aquí:
 - Por qué eligieron este dominio

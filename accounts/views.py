@@ -44,7 +44,7 @@ class RegisterView(CreateView):
     model = CustomUser
     form_class = CustomUserCreationForm
     template_name = "accounts/register.html"
-    success_url = reverse_lazy("app:home")
+    success_url = reverse_lazy("accounts:login")
 
     def form_valid(self, form):
         """Crea un nuevo usuario y lo autentica."""
@@ -52,7 +52,7 @@ class RegisterView(CreateView):
         user.tipo_usuario = 'paciente'
         user.save()
         #Auto-login despues del registro
-        login(self.request, user)
+        #login(self.request, user)
         messages.success(self.request, f"Bienvenido, {user.username}! Tu cuenta ha sido creada correctamente.")
         return super().form_valid(form)
 
