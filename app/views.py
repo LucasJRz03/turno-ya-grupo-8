@@ -145,7 +145,7 @@ class TurnoCreateView(LoginRequiredMixin, CreateView):
         self.object = instancia
         messages.success(self.request, "Turno creado correctamente.")
         return HttpResponseRedirect(self.get_success_url())
-class PacienteListView(LoginRequiredMixin, ListView):
+class PacienteListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     """Lista todos los pacientes registrados."""
     model = Paciente
     template_name = "clinica/lista_pacientes.html"
