@@ -57,7 +57,7 @@
                 <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-calendar-x"></i> Ausencias Programadas</span>
                     {% if user.is_staff %}
-                        <a href="{% url 'app:crear_ausencia' %}" class="btn btn-sm btn-outline-primary">
+                        <a href="{% url 'app:crear_ausencia' %}?medico={{ medico.pk }}" class="btn btn-sm btn-light text-danger fw-bold">
                             + Cargar
                         </a>
                     {% endif %}

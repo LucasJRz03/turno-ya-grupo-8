@@ -1,5 +1,6 @@
 from django import forms
-from .models import Turno, Ausencia, Paciente, timezone
+from .models import Turno, Ausencia, Paciente
+from django.utils import timezone
 
 class TurnoForm(forms.ModelForm):
     """Formulario para crear un turno nuevo."""
@@ -8,7 +9,7 @@ class TurnoForm(forms.ModelForm):
         fields = ["medico", "fecha_hora", "motivo"]
         widgets = {
             "medico": forms.Select(attrs={"class": "form-select"}),
-            "fecha_hora": forms.DateTimeInput(attrs={"class": "form-control", "type": "datetime-local", "step": "900"}),
+            "fecha_hora": forms.DateTimeInput(attrs={"class": "form-control", "type": "date"}),
             "motivo": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Ingrese su consulta"}),
             }
         labels = {

@@ -38,7 +38,7 @@
                         <th>Apellido y Nombre</th>
                         <th>Matrícula</th>
                         <th>Especialidad</th>
-                        {% if user.is_staff %}<th class="text-end">Acciones</th>{% endif %}
+                        {% if user.is_authenticated %}<th class="text-end">Acciones</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -47,12 +47,20 @@
                         <td class="fw-bold">{{ medico.nombre_completo }}</td>
                         <td><span class="badge bg-secondary">{{ medico.matricula }}</span></td>
                         <td>{{ medico.especialidad.nombre }}</td>
-                        {% if user.is_staff %}
-                        <td class="text-end">
-                            <a href="{% url 'app:detalle_medico' medico.pk %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Ver Detalle
-                            </a>
-                        </td>
+                        {% if user.is_authenticated %}
+                            <td class="text-center">
+                                {% if user.is_staff %}
+                                    <a href="{% url 'app:detalle_medico' medico.pk %}" class="btn btn-sm btn-outline-primary mb-1">
+                                        <i class="bi bi-eye"></i> Ver detalle
+                                    </a>
+                                {% endif %}
+                    
+                                {% if not user.is_staff %}
+                                    <a href="{% url 'app:nuevo_turno' %}?medico={{ medico.pk }}" class="btn btn-sm btn-primary mb-1">
+                                        <i class="bi bi-calendar-plus"></i> Sacar Turno
+                                    </a>
+                                {% endif %}
+                            </td>
                         {% endif %}
                     </tr>
                     {% empty %}
