@@ -9,6 +9,7 @@ from .forms import TurnoForm, AusenciaForm
 from .models import Medico, Turno, Paciente, Ausencia
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseRedirect
+from django.db.models import Q
 class HomeView(TemplateView):
     """Vista de inicio. Muestra estadísticas o los próximos turnos del usuario."""
 
@@ -161,8 +162,20 @@ class PacienteListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         raise PermissionDenied("No tienes permisos para acceder a esta sección.")
 
     def get_queryset(self):
-        # select_related para evitar N+1 queries al acceder al usuario
-        return Paciente.objects.select_related('usuario').all()
+        """Permite buscar pacientes por nombre, apellido o dni."""
+        queryset = super().get_queryset().order_by('usuario__last_name', 'usuario__first_name')
+        query = self.request.GET.get('q')
+
+        if query:
+            # Filtra si el texto coincide, apellido, nombre o dni
+            queryset = queryset.filter(
+                Q(usuario__first_name__icontains=query) |
+                Q(usuario__last_name__icontains=query) |
+                Q(dni__icontains=query)
+            )
+
+        return queryset
+   
 class MedicoDetailView(LoginRequiredMixin, DetailView): 
     """Vista para ver el detalle de un médico.
     Muestra información del médico, obras sociales que atiende y sus ausencias.
@@ -299,3 +312,13 @@ class AusenciaCreateView(LoginRequiredMixin, CreateView):
         # Solución del problema de copiado de django
         self.object = instancia
         return HttpResponseRedirect(self.get_success_url())
+    
+    def get_initial(self):
+        initial = super().get_initial()
+
+        medico_id = self.request.GET.get('medico')
+
+        if medico_id:
+            initial['medico'] = medico_id
+
+        return initial

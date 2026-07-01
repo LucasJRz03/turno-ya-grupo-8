@@ -19,6 +19,13 @@ class LoginView(DjangoLoginView):
     success_url = reverse_lazy("app:home")
     form_class=LoginForm
 
+    def get_success_url(self):
+        """Redirige a la página de inicio después del login."""
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return reverse_lazy("admin:index")
+        
+        return super().get_success_url()
+
     def form_valid(self, form):
         """Muestra un mensaje de bienvenida si el formulario es valido."""
         messages.success(self.request, f"Bienvenido, {self.request.user.username}!")
