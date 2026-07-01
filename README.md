@@ -167,6 +167,8 @@ turnoya/
 Describir aquí:
 - Por qué eligieron este dominio
 
+Fue asignado por la catedra, no se cambio porque es muy aplicable.
+
 - Cómo organizaron las responsabilidades entre modelos y vistas
 Implementamos un patrón estricto y unificado en todos los modelos: validate(), new() y update().
 Modelos: Son el núcleo de la lógica. validate es un @classmethod que retorna una lista de errores sin tocar la base de datos. new y update dependen de él para garantizar la integridad.
@@ -175,12 +177,13 @@ Vistas: Utilizamos exclusivamente CBVs (Class-Based Views). Para respetar nuestr
 Ademas, diseñamos un CustomUser (heredando de AbstractUser) que actúa como el núcleo de autenticación. Los perfiles de Paciente y Medico se vinculan mediante OneToOneField. Para el cambio de rol, creamos el modelo SolicitudMedico, que permite a un paciente solicitar ser médico, quedando en estado "Pendiente" hasta que un Administrador lo apruebe desde el panel (usando acciones personalizadas de Django), lo que automáticamente crea el perfil de Medico y actualiza el rol del usuario.
 
 - Qué validaciones decidieron poner en el modelo vs. en el formulario
+
 El modelo es la única fuente de verdad. Las validaciones de negocio (ej. que un turno no se superponga, que el DNI sea numérico, que la fecha no sea pasada) viven en el validate() del modelo. Los formularios (forms.py) se encargan de la validación de formato, de inyectar las clases de Bootstrap 5 para la UI, y de actuar como puente: si el modelo rechaza los datos, el formulario los muestra al usuario.
 
 - Cómo dividieron el trabajo entre los integrantes
 
-Lucas Rodríguez: Se enfocó en la arquitectura de los modelos (Medico, Paciente, Ausencia, ObraSocial), el patrón validate/new/update con @classmethod y **kwargs, las vistas de gestión de turnos (cancelar, confirmar), y la lógica de superposición horaria. También desarrolló los tests unitarios de los modelos y views de la app principal. También configuró el panel de administración con django-unfold y las acciones personalizadas para aprobar/rechazar solicitudes.
-Cristian Acho: Desarrolló el sistema de autenticación (CustomUser, Login, Logout, Registro), el perfil de usuario con la lógica de SolicitudMedico y el formulario de paciente, y el diseño de los templates de la app accounts con Bootstrap 5 (Navbar dinámica, tarjetas, tablas responsivas, manejo de errores). Laas vistas de gestión de turnos (nuevo, editar)
+Lucas Rodríguez: Se enfocó en la arquitectura de los modelos (Medico, Paciente, Ausencia, ObraSocial), el patrón validate/new/update, las vistas de gestión de turnos (cancelar, confirmar), y la lógica de superposición horaria. También desarrolló los tests unitarios de los modelos y views de la app principal. También configuró el panel de administración con django-unfold y las acciones personalizadas para aprobar/rechazar solicitudes.
+Cristian Acho: Desarrolló el sistema de autenticación (CustomUser, Login, Logout, Registro), el perfil de usuario con la lógica de SolicitudMedico y el formulario de paciente, y el diseño de los templates de la app accounts con Bootstrap 5 (Navbar dinámica, tarjetas, tablas responsivas, manejo de errores). Las vistas de gestión de turnos (nuevo, editar) y la normalizacion del patron validate/new/update con @classmethod y **kwargs
 
 - Cualquier decisión de diseño no obvia (ej: por qué usaron FBV en lugar de CBV, cómo manejaron la relación User ↔ Paciente, etc.)
 

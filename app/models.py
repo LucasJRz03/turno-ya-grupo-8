@@ -66,7 +66,7 @@ class Medico(models.Model):
 
     def cantidad_turnos(self):
         """Retorna la cantidad total de turnos asociados a este médico."""
-        return self.turno_set.count()
+        return self.turnos.count()
 
     @classmethod
     def validate(cls, usuario, matricula, especialidad, exclude_pk=None):
@@ -379,7 +379,7 @@ class ObraSocial(models.Model):
     nombre = models.CharField(max_length=100)
     sitio_web = models.URLField(blank=True, null=True)
     requiere_token = models.BooleanField(default=False)
-    medicos_disponibles = models.ManyToManyField('Medico', related_name='obra_sociales', blank=True)
+    medicos_disponibles = models.ManyToManyField('Medico', related_name='obras_sociales', blank=True)
 
     @classmethod
     def validate(cls, nombre, sitio_web='', requiere_token=False):
