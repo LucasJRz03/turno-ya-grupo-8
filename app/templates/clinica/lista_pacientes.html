@@ -33,7 +33,7 @@
                 <tr>
                     <td class="fw-semibold">{{ paciente.nombre_completo }}</td>
                     <td>{{ paciente.dni }}</td>
-                    <td>{{ paciente.email }}</td>
+                    <td>{{ paciente.usuario.email }}</td>
                     <td>{{ paciente.telefono|default:"-" }}</td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-outline-primary mb-1" disabled><i class="bi bi-person-lines-fill"></i> Detalle</button>
